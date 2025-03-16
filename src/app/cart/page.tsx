@@ -4,19 +4,17 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import api from "../utils/api";
-// import { CartItem } from '../../../types/types';
 
 export interface CartItem {
   productId: string;
   name: string;
   price: number;
   quantity: number;
-  packageSize: string; // Add this line
+  packageSize: string;
   image?: string | string[];
   images?: string[];
   addedAt?: string;
 }
-
 
 export default function CartPage() {
   const router = useRouter();
@@ -55,7 +53,7 @@ export default function CartPage() {
     }
   }, [userId]);
 
-  // Periodically send any quantity changes to the backend
+  // Periodically send any quantity updates to the backend
   const sendQuantityUpdates = useCallback(async () => {
     if (!userId || Object.keys(quantityChanges.current).length === 0) return;
     try {
@@ -63,7 +61,7 @@ export default function CartPage() {
         latestCartRef.current.map(({ productId, packageSize, quantity }) =>
             api.put("/cart", { userId, productId, quantity, packageSize })
         )
-    );
+      );
       
       quantityChanges.current = {};
     } catch (err) {
@@ -85,14 +83,14 @@ export default function CartPage() {
     setCart(prevCart =>
       prevCart.map(item =>
         item.productId === productId
-          ? { ...item, quantity: Math.max(1, item.quantity + change) } // Ensure quantity stays at least 1
+          ? { ...item, quantity: Math.max(1, item.quantity + change) }
           : item
       )
     );
   
     const updatedCart = latestCartRef.current.map(item =>
       item.productId === productId
-        ? { ...item, quantity: Math.max(1, item.quantity + change) } // Ensure quantity stays at least 1
+        ? { ...item, quantity: Math.max(1, item.quantity + change) }
         : item
     );
   
@@ -101,8 +99,6 @@ export default function CartPage() {
       updatedCart.find(it => it.productId === productId)?.quantity || 1;
   };
   
-  
-
   // Remove an item from the cart
   const removeCartItem = async (productId: string, packageSize: string) => {
     setCart(prevCart =>
@@ -170,8 +166,8 @@ export default function CartPage() {
       <div className="w-full max-w-7xl px-4 md:px-5 lg:6 mx-auto relative z-10">
         <div className="grid grid-cols-12">
           {/* Left Column: Cart Items */}
-          <div className="col-span-12 xl:col-span-8 lg:pr-8 pt-14 pb-8 lg:py-24 w-full max-xl:max-w-3xl max-xl:mx-auto">
-            <h2 className="font-manrope font-bold text-3xl leading-10 text-black mb-8">
+          <div className="col-span-12 xl:col-span-8 lg:pr-8 pt-8 pb-8 lg:py-24 w-full max-xl:max-w-3xl max-xl:mx-auto">
+            <h2 className="font-manrope font-bold text-2xl md:text-3xl leading-10 text-black mb-4 md:mb-8">
               Your Cart
             </h2>
             {cart.map(item => {
@@ -187,44 +183,45 @@ export default function CartPage() {
               return (
                 <div
                   key={uuidv4()}
-                  className="flex items-center justify-between p-4 border rounded-lg shadow-md mb-4"
+                  className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 border rounded-lg shadow-md mb-4 gap-3"
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 w-full md:w-auto">
                     <Image
                       src={imageUrl}
                       alt={item.name}
-                      width={80}
-                      height={80}
+                      width={60}
+                      height={60}
                       className="object-cover rounded"
                     />
                     <div>
-                      <h2 className="text-lg font-semibold">{item.name}</h2>
+                      <h2 className="text-base md:text-lg font-semibold">{item.name}</h2>
                       <p className="text-gray-700">Price: ₹{item.price}</p>
+                      <p className="text-gray-500 text-sm mt-1">Size: {item.packageSize}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4 w-full md:w-auto mt-2 md:mt-0">
                     <div className="flex items-center space-x-2">
                       <button
                         onClick={() => modifyCartQuantity(item.productId, -1)}
-                        className="px-3 py-2 bg-gray-300 rounded text-black"
+                        className="px-2 md:px-3 py-1 md:py-2 bg-gray-300 rounded text-black"
                       >
                         ➖
                       </button>
-                      <span className="text-lg font-semibold">
+                      <span className="text-base md:text-lg font-semibold px-2">
                         {item.quantity}
                       </span>
                       <button
                         onClick={() => modifyCartQuantity(item.productId, 1)}
-                        className="px-3 py-2 bg-gray-300 rounded text-black"
+                        className="px-2 md:px-3 py-1 md:py-2 bg-gray-300 rounded text-black"
                       >
                         ➕
                       </button>
                     </div>
                     <button
-                      onClick={() => removeCartItem(item.productId,item.packageSize)}
-                      className="px-4 py-2 bg-red-500 text-white rounded"
+                      onClick={() => removeCartItem(item.productId, item.packageSize)}
+                      className="px-3 md:px-4 py-1 md:py-2 bg-red-500 text-white rounded text-sm md:text-base"
                     >
-                      ❌ Remove
+                      Remove
                     </button>
                   </div>
                 </div>
@@ -232,11 +229,11 @@ export default function CartPage() {
             })}
           </div>
           {/* Right Column: Order Summary */}
-          <div className="col-span-12 xl:col-span-4 bg-gray-50 w-full max-xl:px-6 max-w-3xl xl:max-w-lg mx-auto lg:pl-8 py-24">
-            <h2 className="font-manrope font-bold text-3xl leading-10 text-black pb-8 border-b border-gray-300">
+          <div className="col-span-12 xl:col-span-4 bg-gray-50 w-full px-4 md:px-6 max-w-3xl xl:max-w-lg mx-auto lg:pl-8 py-8 md:py-24">
+            <h2 className="font-manrope font-bold text-2xl md:text-3xl leading-10 text-black pb-6 md:pb-8 border-b border-gray-300">
               Order Summary
             </h2>
-            <div className="mt-8">
+            <div className="mt-6 md:mt-8">
               {/* Promo Code Section */}
               <div className="mb-6">
                 <label className="block mb-2 text-gray-400 text-sm font-medium">
@@ -245,37 +242,37 @@ export default function CartPage() {
                 <div className="flex">
                   <input
                     type="text"
-                    className="block w-full h-11 pr-4 pl-5 py-2 text-base font-normal shadow-xs text-gray-900 bg-white border border-gray-300 rounded-l-lg placeholder-gray-500 focus:outline-gray-400"
+                    className="block w-full h-10 md:h-11 pr-4 pl-3 md:pl-5 py-2 text-sm md:text-base font-normal shadow-xs text-gray-900 bg-white border border-gray-300 rounded-l-lg placeholder-gray-500 focus:outline-gray-400"
                     placeholder="xxxx xxxx xxxx"
                   />
                   <button
                     type="button"
-                    className="px-4 py-2 bg-black text-white rounded-r-lg text-sm font-semibold transition-all duration-500 hover:bg-black/80"
+                    className="px-3 md:px-4 py-2 bg-black text-white rounded-r-lg text-xs md:text-sm font-semibold transition-all duration-500 hover:bg-black/80"
                   >
                     Apply
                   </button>
                 </div>
               </div>
-              {/* Final Totals and Order Now button on one line */}
-              <div className="flex items-center justify-between border-t border-gray-200 pt-8">
+              {/* Final Totals and Order Now button - stacked on mobile */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-t border-gray-200 pt-6 md:pt-8 gap-4">
                 <div>
-                  <p className="font-medium text-xl text-black">
+                  <p className="font-medium text-lg md:text-xl text-black">
                     {itemCount} Items
                   </p>
-                  <p className="font-semibold text-xl text-indigo-600">
+                  <p className="font-semibold text-lg md:text-xl text-indigo-600">
                   ₹{itemsTotal.toFixed(2)}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={placeOrder}
-                  className="bg-green-500 text-white px-6 py-3 rounded-lg text-lg font-semibold"
+                  className="bg-green-500 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg text-base md:text-lg font-semibold w-full sm:w-auto"
                 >
                   🛒 Order Now
                 </button>
               </div>
               {orderStatus && (
-                <p className="mt-6 text-lg text-blue-600 font-semibold text-center">
+                <p className="mt-4 md:mt-6 text-base md:text-lg text-blue-600 font-semibold text-center">
                   {orderStatus}
                 </p>
               )}
