@@ -3,7 +3,7 @@ import { db } from "../../../../utils/firebase";
 import { doc, getDoc,updateDoc } from "firebase/firestore";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { User } from "../../../../types/types";
+
 
 
 const SHIPROCKET_API_BASE = "https://apiv2.shiprocket.in/v1/external";
