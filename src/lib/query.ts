@@ -9,6 +9,7 @@ import { Crop, Disease, Product, Recommendation } from "../../types/types";
  */
 export const fetchCrops = async (): Promise<Crop[]> => {
   const res = await axios.get("/api/question/crop");
+  console.log(cropId)
   return res.data;
 };
 
@@ -17,6 +18,7 @@ export const fetchCrops = async (): Promise<Crop[]> => {
  */
 export const fetchDiseasesByCrop = async (cropId: string): Promise<Disease[]> => {
   const res = await axios.get("/api/question/disease?cropId=${cropId}");
+  console.log(cropId)
   return res.data;
 };
 
