@@ -2,13 +2,13 @@ import axios from "axios";
 import { Crop, Disease, Product, Recommendation } from "../../types/types";
 
 // ✅ Ensure Base URL is Correct
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
+
 
 /**
  * Fetch all crops from the API.
  */
 export const fetchCrops = async (): Promise<Crop[]> => {
-  const res = await axios.get(`${API_BASE}/api/question/crop`);
+  const res = await axios.get("/api/question/crop");
   return res.data;
 };
 
@@ -16,7 +16,7 @@ export const fetchCrops = async (): Promise<Crop[]> => {
  * Fetch diseases based on the selected crop.
  */
 export const fetchDiseasesByCrop = async (cropId: string): Promise<Disease[]> => {
-  const res = await axios.get(`${API_BASE}/api/question/disease?cropId=${cropId}`);
+  const res = await axios.get("/api/question/disease?cropId=${cropId}");
   return res.data;
 };
 
@@ -25,7 +25,7 @@ export const fetchDiseasesByCrop = async (cropId: string): Promise<Disease[]> =>
  */
 export const fetchProductById = async (productId: string): Promise<Product | null> => {
   try {
-    const res = await axios.get(`${API_BASE}/api/product/${productId}`);
+    const res = await axios.get("/api/product/${productId}");
     if (res.data.success) {
       return res.data.data;
     } else {
@@ -44,7 +44,7 @@ export const fetchProductById = async (productId: string): Promise<Product | nul
 export const fetchRecommendedProducts = async (cropId: string, diseaseId: string): Promise<Product[]> => { 
   try {
     // Fetch recommended product IDs
-    const res = await axios.get(`${API_BASE}/api/question/recommendation?cropId=${cropId}&diseaseId=${diseaseId}`);
+    const res = await axios.get("/api/question/recommendation?cropId=${cropId}&diseaseId=${diseaseId}");
     const recommendations: Recommendation[] = res.data;
 
     if (recommendations.length === 0) {
