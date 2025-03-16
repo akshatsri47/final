@@ -9,7 +9,7 @@ import { Crop, Disease, Product, Recommendation } from "../../types/types";
  */
 export const fetchCrops = async (): Promise<Crop[]> => {
   const res = await axios.get("/api/question/crop");
-  console.log(cropId)
+  
   return res.data;
 };
 
