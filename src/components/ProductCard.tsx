@@ -178,7 +178,7 @@ export default function ProductCard({ product }: { product: ExamProduct }) {
                 }`}
                 onClick={addToCart}
               >
-                Add to Cart 🛒
+                Add to Cart 
               </button>
             </div>
           </div>

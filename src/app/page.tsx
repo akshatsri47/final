@@ -1,11 +1,9 @@
 import Link from "next/link";
 import ProductGrid from "../components/ProductGrid";
-import Testimonials from "../components/Testimonials";
 import { Product } from "../../types/types";
 import ShopByCategory from "../components/ShopByCategory"; 
 import Whatweoffer from "../components/Whatweoffer"
 import AnimatedProcess from "../components/AnimatedProcess";
-import Review from "../components/Review";
 import Features from "@/components/Highlight";
 import Slider from "@/components/Slider";
 
@@ -86,12 +84,7 @@ export default async function ProductList() {
       <Whatweoffer />
 
       {/* REVIEWS */}
-      <Review />
-
-      {/* TESTIMONIALS */}
-      <section className="py-10 bg-[#f9f9f9]">
-        <Testimonials />
-      </section>
+      
 
       {/* FOOTER */}
       <footer className="bg-[#4f8e42] text-white py-5 text-center">
