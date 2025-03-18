@@ -29,23 +29,42 @@ export default function PhoneAuth() {
   const [success, setSuccess] = useState("");
   const [step, setStep] = useState(1); // 1: Phone input, 2: OTP verification
   const [countdown, setCountdown] = useState(0);
+  const [alreadyLoggedIn, setAlreadyLoggedIn] = useState(false);
+
+  // Check if user is already logged in and notify + redirect if so
+  useEffect(() => {
+    const userId = localStorage.getItem("userId");
+    if (userId) {
+      setAlreadyLoggedIn(true);
+      setSuccess("You are already logged in. Redirecting...");
+      setTimeout(() => {
+        router.push("/");
+      }, 3000); // Redirect after 3 seconds
+    }
+  }, [router]);
+
+  // Auto-refresh the screen if an error occurs
+  useEffect(() => {
+    if (error) {
+      const timeout = setTimeout(() => {
+        window.location.reload();
+      }, 5000); // Refresh after 5 seconds
+      return () => clearTimeout(timeout);
+    }
+  }, [error]);
 
   // Countdown timer for resending OTP
   useEffect(() => {
     if (countdown <= 0) return;
-    
     const timer = setTimeout(() => {
       setCountdown(countdown - 1);
     }, 1000);
-    
     return () => clearTimeout(timer);
   }, [countdown]);
 
   // Format phone number as user types
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "");
-    
-    // Format with country code if needed
     if (value.length > 0) {
       if (!value.startsWith("+")) {
         setPhone("+" + value);
@@ -61,7 +80,6 @@ export default function PhoneAuth() {
     if (window.recaptchaVerifier) {
       window.recaptchaVerifier.clear();
     }
-    
     window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
       size: "invisible",
       callback: () => console.log("reCAPTCHA verified"),
@@ -73,11 +91,9 @@ export default function PhoneAuth() {
       setError("Please enter a valid phone number");
       return;
     }
-
     setLoading(true);
     setError("");
     setSuccess("");
-
     try {
       setupRecaptcha();
       const confirmation = await signInWithPhoneNumber(auth, phone, window.recaptchaVerifier);
@@ -87,12 +103,9 @@ export default function PhoneAuth() {
       setCountdown(60); // Start 60 seconds countdown for resend
     } catch (error: unknown) {
       console.error("OTP sending failed:", error);
-      
-      // Type check and extract message
-      const errorMessage = isFirebaseError(error) 
-        ? error.message 
+      const errorMessage = isFirebaseError(error)
+        ? error.message
         : "Failed to send OTP. Please try again.";
-        
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -105,18 +118,14 @@ export default function PhoneAuth() {
       setError("Please enter a valid OTP");
       return;
     }
-
     setLoading(true);
     setError("");
     setSuccess("");
-
     try {
       const result = await confirmationResult.confirm(otp);
       console.log("User verified:", result.user);
-
       const userId = result.user.uid;
       localStorage.setItem("userId", userId);
-
       const newUser = {
         id: userId,
         email: result.user.email || null,
@@ -125,24 +134,16 @@ export default function PhoneAuth() {
         createdAt: new Date().toISOString(),
         phone: result.user.phoneNumber,
       };
-
       await setDoc(doc(db, "users", userId), newUser, { merge: true });
-
       setSuccess("Verification successful! Redirecting...");
-      
-      // Redirect to home page after successful verification
       setTimeout(() => {
         router.push("/");
-      }, 1500); // Small delay to show success message
-      
+      }, 1500);
     } catch (error: unknown) {
       console.error("OTP verification failed:", error);
-      
-      // Type check and extract message
-      const errorMessage = isFirebaseError(error) 
-        ? error.message 
+      const errorMessage = isFirebaseError(error)
+        ? error.message
         : "Invalid OTP. Please try again.";
-        
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -152,10 +153,10 @@ export default function PhoneAuth() {
   // Type guard for Firebase errors
   const isFirebaseError = (error: unknown): error is FirebaseErrorType => {
     return (
-      typeof error === 'object' && 
-      error !== null && 
-      'code' in error && 
-      'message' in error
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      "message" in error
     );
   };
 
@@ -166,22 +167,37 @@ export default function PhoneAuth() {
     setOtp("");
   };
 
+  // If user is already logged in, show notification only
+  if (alreadyLoggedIn) {
+    return (
+      <div className="max-w-md mx-auto p-8 bg-white rounded-xl shadow-lg border border-gray-100">
+        <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">
+          Phone Authentication
+        </h2>
+        {success && (
+          <div className="mb-4 p-3 bg-green-50 border-l-4 border-green-500 text-green-700 rounded">
+            <p className="text-sm">{success}</p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-md mx-auto p-8 bg-white rounded-xl shadow-lg border border-gray-100">
-      <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Phone Authentication</h2>
-
+      <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">
+        Phone Authentication
+      </h2>
       {error && (
         <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 rounded">
           <p className="text-sm">{error}</p>
         </div>
       )}
-
       {success && (
         <div className="mb-4 p-3 bg-green-50 border-l-4 border-green-500 text-green-700 rounded">
           <p className="text-sm">{success}</p>
         </div>
       )}
-
       {step === 1 ? (
         /* Step 1: Phone Input */
         <div className="space-y-4">
@@ -200,13 +216,14 @@ export default function PhoneAuth() {
               />
               <div className="absolute left-3 top-4 text-gray-400">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                  <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.540l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
                 </svg>
               </div>
             </div>
-            <p className="mt-1 text-xs text-gray-500">Enter your phone number with country code</p>
+            <p className="mt-1 text-xs text-gray-500">
+              Enter your phone number with country code
+            </p>
           </div>
-
           <button
             onClick={sendOtp}
             disabled={loading || !phone}
@@ -218,9 +235,18 @@ export default function PhoneAuth() {
           >
             {loading ? (
               <span className="flex items-center justify-center">
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg
+                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
                 </svg>
                 Sending...
               </span>
@@ -251,12 +277,15 @@ export default function PhoneAuth() {
               />
               <div className="absolute left-3 top-4 text-gray-400">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
             </div>
           </div>
-
           <button
             onClick={verifyOtp}
             disabled={loading || otp.length < 6}
@@ -268,9 +297,18 @@ export default function PhoneAuth() {
           >
             {loading ? (
               <span className="flex items-center justify-center">
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg
+                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
                 </svg>
                 Verifying...
               </span>
@@ -278,15 +316,10 @@ export default function PhoneAuth() {
               "Verify Code"
             )}
           </button>
-
           <div className="flex justify-between items-center text-sm">
-            <button 
-              onClick={resetAndGoBack} 
-              className="text-gray-600 hover:text-gray-800"
-            >
+            <button onClick={resetAndGoBack} className="text-gray-600 hover:text-gray-800">
               Change number
             </button>
-            
             <button
               onClick={sendOtp}
               disabled={countdown > 0 || loading}
@@ -297,7 +330,6 @@ export default function PhoneAuth() {
           </div>
         </div>
       )}
-
       {/* reCAPTCHA */}
       <div id="recaptcha-container" className="mt-4"></div>
     </div>
