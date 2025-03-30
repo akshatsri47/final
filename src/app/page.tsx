@@ -7,6 +7,7 @@ import AnimatedProcess from "../components/AnimatedProcess";
 import Features from "@/components/Highlight";
 import Slider from "@/components/Slider";
 import CropDiseaseChecker from "@/components/CropDiseaseChecker";
+import QuestionnaireAlert from "@/components/QuestionnaireAlert";
 import { normalizeCategory } from "../../utils/normalizeCategory";
 
 
@@ -98,6 +99,8 @@ export default async function ProductList() {
       <footer className="bg-[#4f8e42] text-white py-5 text-center">
         {/* Footer content here */}
       </footer>
+      <QuestionnaireAlert />
+
     </>
   );
 }
