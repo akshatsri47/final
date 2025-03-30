@@ -1,4 +1,4 @@
-import Link from "next/link";
+
 
 import CategorySection from "@/components/CategorySection";
 import { Product } from "../../types/types";
@@ -7,6 +7,7 @@ import Whatweoffer from "../components/Whatweoffer"
 import AnimatedProcess from "../components/AnimatedProcess";
 import Features from "@/components/Highlight";
 import Slider from "@/components/Slider";
+import CropDiseaseChecker from "@/components/CropDiseaseChecker";
 
 export const dynamic = "force-dynamic"; // Forces SSR
 
@@ -56,40 +57,23 @@ export default async function ProductList() {
     <>
       {/* HERO / SLIDER */}
       <Slider />
-      <section className="py-10">
-        <h2 className="text-2xl font-semibold text-center mb-6">All Categories</h2>
-        <div className="flex flex-wrap justify-center gap-4">
-          {Object.keys(groupedProducts).map((category) => (
-            <Link
-              key={category}
-              href={`#${category.toLowerCase().replace(/\s+/g, "-")}`}
-              className="px-6 py-3 bg-gray-200 rounded-md hover:bg-gray-300 transition"
-            >
-              {category.toUpperCase()}
-            </Link>
-          ))}
-        </div>
-      </section>
+      
       
       {/* SHOP BY CATEGORY */}
       <ShopByCategory />
 
       {/* HIGHLIGHT ROW */}
       <Features />
-
+      
+      {/* CROP DISEASE CHECKER */}
+      <CropDiseaseChecker />
       {/* LATEST PRODUCTS */}
       <section className="py-10 bg-[#f9f9f9]">
         <div className="container mx-auto text-center">
           <h2 className="mb-8 text-2xl font-semibold">Latest Products</h2>
 
           {/* Questionnaire Button */}
-          <div className="mb-6">
-            <Link href="/Questionnaire">
-              <button className="px-5 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition">
-                Take Questionnaire
-              </button>
-            </Link>
-          </div>
+          
 
           {error ? (
             <p className="text-red-500 text-lg">❌ {error}</p>

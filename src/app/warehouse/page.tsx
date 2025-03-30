@@ -1,5 +1,5 @@
 import React from 'react';
-
+import Image from 'next/image';
 export default function WarehousingPage() {
   return (
     <main className="flex flex-col w-full">
@@ -81,11 +81,17 @@ export default function WarehousingPage() {
           </div>
           {/* Image (replace '/sacks.jpg' with your own image) */}
           <div className="flex-1">
-            <img
-              src="/sacks.jpg"
-              alt="Stored agricultural sacks"
-              className="w-full h-auto rounded-md shadow"
-            />
+          <div className="relative w-full h-64 md:h-80 rounded-md overflow-hidden shadow">
+  <Image
+    src="/sacks.jpg"
+    alt="Stored agricultural sacks"
+    fill
+    className="object-cover rounded-md"
+    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
+    priority
+  />
+</div>
+
           </div>
         </div>
       </section>
