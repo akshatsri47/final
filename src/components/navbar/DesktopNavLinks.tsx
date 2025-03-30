@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import SupportIcon from "../Supporticon";
 
 export default function DesktopNavLinks() {
   return (
@@ -9,6 +10,7 @@ export default function DesktopNavLinks() {
       <Link href="/about" className="hover:text-white hover:underline underline-offset-4 transition-colors">About</Link>
       <Link href="/contact" className="hover:text-white hover:underline underline-offset-4 transition-colors">Contact</Link>
       <Link href="/warehouse" className="hover:text-white hover:underline underline-offset-4 transition-colors">Warehouse</Link>
+      <SupportIcon />
     </div>
   );
 }

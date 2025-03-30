@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { ShoppingCart, User, Languages } from "lucide-react";
 import { useLogout } from "@/app/hooks/uselogout";
+import SupportIcon from "../Supporticon";
 
 // interface GoogleTranslateConfig {
 //   pageLanguage: string;
@@ -215,6 +216,7 @@ export default function NavIcons() {
       
       {/* Hidden Google Translate Element - only rendered on client */}
       {isMounted && <div id="google_translate_element" className="hidden"></div>}
+      <SupportIcon />
     </div>
   );
 }

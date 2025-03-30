@@ -19,7 +19,7 @@ export default function Features() {
       <div className="text-center flex-1 min-w-[180px]">
         <Truck className="mx-auto text-green-500" size={48} />
         <h3 className="text-lg mt-2 mb-1 font-semibold">Free Delivery</h3>
-        <p className="text-gray-600">On orders over ₹500</p>
+        <p className="text-gray-600">On all orders</p>
       </div>
     </div>
   );
