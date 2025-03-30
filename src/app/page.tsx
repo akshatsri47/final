@@ -8,6 +8,7 @@ import AnimatedProcess from "../components/AnimatedProcess";
 import Features from "@/components/Highlight";
 import Slider from "@/components/Slider";
 import CropDiseaseChecker from "@/components/CropDiseaseChecker";
+import QuestionnaireAlert from "@/components/QuestionnaireAlert";
 
 export const dynamic = "force-dynamic"; // Forces SSR
 
@@ -100,6 +101,8 @@ export default async function ProductList() {
       <footer className="bg-[#4f8e42] text-white py-5 text-center">
         {/* Footer content here */}
       </footer>
+      <QuestionnaireAlert />
+
     </>
   );
 }
