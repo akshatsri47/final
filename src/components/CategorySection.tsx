@@ -1,7 +1,9 @@
+// components/CategorySection.tsx
 "use client";
 import { useState } from "react";
 import ProductGrid from "./ProductGrid";
 import { Product } from "../../types/types";
+import { categorySlugs } from "../../utils/category";
 
 interface CategorySectionProps {
   category: string;
@@ -9,14 +11,12 @@ interface CategorySectionProps {
 }
 
 export default function CategorySection({ category, products }: CategorySectionProps) {
+  console.log("Category:", category, "Mapped ID:", categorySlugs[category]);
   const [visibleCount, setVisibleCount] = useState(5); // Initially show 5 products
 
   return (
-    // Give each category an ID for anchor links (replace spaces with hyphens).
-    <div
-      id={category.toLowerCase().replace(/\s+/g, "-")}
-      className="mb-10"
-    >
+    // Set the id using the hardcoded mapping.
+    <div id={categorySlugs[category]} className="mb-10">
       <h2 className="text-3xl font-bold mb-4 bg-[#81b622] text-white p-2">
         {category.toUpperCase()}
       </h2>
