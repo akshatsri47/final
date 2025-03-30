@@ -1,5 +1,6 @@
 import Link from "next/link";
-import ProductGrid from "../components/ProductGrid";
+
+import CategorySection from "@/components/CategorySection";
 import { Product } from "../../types/types";
 import ShopByCategory from "../components/ShopByCategory"; 
 import Whatweoffer from "../components/Whatweoffer"
@@ -44,11 +45,31 @@ async function fetchProducts(): Promise<{ products: Product[]; error: string | n
 
 export default async function ProductList() {
   const { products, error } = await fetchProducts();
+  const groupedProducts: { [key: string]: Product[] } = products.reduce((acc, product) => {
+    const category = product.category || "Uncategorized";
+    if (!acc[category]) acc[category] = [];
+    acc[category].push(product);
+    return acc;
+  }, {} as { [key: string]: Product[] });
 
   return (
     <>
       {/* HERO / SLIDER */}
       <Slider />
+      <section className="py-10">
+        <h2 className="text-2xl font-semibold text-center mb-6">All Categories</h2>
+        <div className="flex flex-wrap justify-center gap-4">
+          {Object.keys(groupedProducts).map((category) => (
+            <Link
+              key={category}
+              href={`#${category.toLowerCase().replace(/\s+/g, "-")}`}
+              className="px-6 py-3 bg-gray-200 rounded-md hover:bg-gray-300 transition"
+            >
+              {category.toUpperCase()}
+            </Link>
+          ))}
+        </div>
+      </section>
       
       {/* SHOP BY CATEGORY */}
       <ShopByCategory />
@@ -60,7 +81,7 @@ export default async function ProductList() {
       <section className="py-10 bg-[#f9f9f9]">
         <div className="container mx-auto text-center">
           <h2 className="mb-8 text-2xl font-semibold">Latest Products</h2>
-          
+
           {/* Questionnaire Button */}
           <div className="mb-6">
             <Link href="/Questionnaire">
@@ -75,7 +96,13 @@ export default async function ProductList() {
           ) : products.length === 0 ? (
             <p className="text-gray-500">No products found.</p>
           ) : (
-            <ProductGrid products={products} />
+            Object.entries(groupedProducts).map(([category, catProducts]) => (
+              <CategorySection
+                key={category}
+                category={category}
+                products={catProducts}
+              />
+            ))
           )}
         </div>
       </section>
@@ -83,7 +110,6 @@ export default async function ProductList() {
       <AnimatedProcess />
       <Whatweoffer />
 
-      {/* REVIEWS */}
       
 
       {/* FOOTER */}
