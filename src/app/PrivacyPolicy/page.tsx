@@ -12,6 +12,11 @@ import {
   Leaf,
   Sprout,
   LucideIcon,
+  MapPin,
+  Timer,
+  Search,
+  XCircle,
+  Box,
 } from 'lucide-react';
 
 interface SectionProps {
@@ -35,9 +40,10 @@ const Section = ({ icon: Icon, title, children }: SectionProps) => (
 export default function TermsAndPrivacy() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
+      {/* Hero */}
       <div className="w-full bg-green-700 py-8 px-4 relative overflow-hidden">
         <div className="max-w-4xl mx-auto relative z-10">
-          <h1 className="text-3xl md:text-4xl font-bold text-white text-center">Terms & Conditions</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-white text-center">Terms, Privacy & Shipping Policy</h1>
           <p className="text-green-100 text-center mt-2">KrishDoctor - Nutrients for Healthy Growth</p>
         </div>
         <div className="absolute -bottom-8 left-0 w-24 h-24 text-green-600 opacity-30">
@@ -49,13 +55,15 @@ export default function TermsAndPrivacy() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-12">
+
+        {/* Intro */}
         <div className="bg-white p-6 rounded-lg shadow-md mb-8">
           <p className="text-gray-600 italic">
-            At KrishDoctor, we&apos;re committed to providing quality agricultural products. These terms ensure
-            a transparent relationship with our customers while keeping your information secure.
+            At KrishDoctor, we&apos;re committed to providing quality agricultural products and maintaining transparency with our customers.
           </p>
         </div>
 
+        {/* Terms & Conditions */}
         <Section icon={ShieldCheck} title="1. General Terms">
           <p>By using our website, you confirm you&apos;re at least 18 or have guardian consent.</p>
           <p>We reserve the right to update terms anytime without notice.</p>
@@ -96,6 +104,7 @@ export default function TermsAndPrivacy() {
           <p>Governed by Indian Law. Any disputes will be addressed in Indian courts.</p>
         </Section>
 
+        {/* Privacy Policy Section */}
         <div className="flex items-center my-12">
           <div className="flex-grow h-px bg-green-200"></div>
           <div className="mx-4 px-6 py-3 bg-green-600 rounded-full">
@@ -141,9 +150,52 @@ export default function TermsAndPrivacy() {
         <Section icon={Gavel} title="6. Your Rights">
           <p>You can request access, correction, or deletion of your data at:</p>
           <p>Email: <a href="mailto:Guptatradingcompany910@gmail.com" className="text-green-600 underline hover:text-green-800">Guptatradingcompany910@gmail.com</a></p>
-          <p>Phone: <a href="tel:9109109866" className="text-green-600 underline hover:text-green-800">+91 910910 9866</a></p>
+          <p>Phone: <a href="tel:9109109866" className="text-green-600 underline hover:text-green-800">+91 91091 09866</a></p>
         </Section>
 
+        {/* Shipping Policy Section */}
+        <div className="flex items-center my-12">
+          <div className="flex-grow h-px bg-green-200"></div>
+          <div className="mx-4 px-6 py-3 bg-green-600 rounded-full">
+            <h2 className="text-xl font-bold text-white">Shipping Policy</h2>
+          </div>
+          <div className="flex-grow h-px bg-green-200"></div>
+        </div>
+
+        <Section icon={MapPin} title="1. Shipping Locations">
+          <p>We deliver only within India.</p>
+          <p>Shipping is available in both urban and rural areas, subject to courier service availability.</p>
+        </Section>
+
+        <Section icon={Timer} title="2. Delivery Timeframes">
+          <p>Orders are processed within 1-3 business days.</p>
+          <p>Estimated delivery: 5-10 business days depending on location.</p>
+          <p>Remote areas may experience extra delays.</p>
+        </Section>
+
+        <Section icon={Banknote} title="3. Shipping Charges">
+          <p>Calculated based on product weight and delivery destination.</p>
+          <p>Free shipping may apply on certain promotional offers.</p>
+        </Section>
+
+        <Section icon={Search} title="4. Order Tracking">
+          <p>Tracking ID will be sent via email/SMS once your order is shipped.</p>
+          <p>You can track the order using the provided link.</p>
+        </Section>
+
+        <Section icon={XCircle} title="5. Undeliverable Orders">
+          <p>Reasons include incorrect address, recipient unavailable, or transport restrictions.</p>
+          <p>In such cases, the order may return to us and re-shipping charges will apply.</p>
+        </Section>
+
+        <Section icon={Box} title="6. Damaged or Lost Shipments">
+          <p>Report damaged items within 24 hours of delivery.</p>
+          <p>Lost shipments will be investigated with the courier.</p>
+          <p>Compensation or replacement is based on investigation results.</p>
+          <p>Contact: <a href="mailto:Guptatradingcompany910@gmail.com" className="text-green-600 underline">Guptatradingcompany910@gmail.com</a> | 📞 <a href="tel:9109109866" className="text-green-600 underline">+91 91091 09866</a></p>
+        </Section>
+
+        {/* Trust Footer */}
         <div className="mt-12 bg-green-50 p-6 rounded-lg border border-green-200">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             <div className="flex flex-col items-center">
