@@ -23,6 +23,8 @@ export default function MobileMenu() {
         <Link href="/warehouse" className="flex items-center py-3 hover:bg-white/10 px-2 rounded-lg transition-colors">
           Warehouse
         </Link>
+        <Link href="/PrivacyPolicy" className="hover:text-white hover:underline underline-offset-4 transition-colors">Privacy and Policy</Link>
+
       </div>
     </div>
   );
