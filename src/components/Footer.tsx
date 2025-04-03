@@ -1,4 +1,5 @@
 import Link from "next/link";
+
 export default function Footer() {
   return (
     <footer className="w-full bg-black text-gray-100 py-6 mt-auto">
@@ -14,8 +15,8 @@ export default function Footer() {
               Your go-to destination for quality products and top-notch service.
             </p>
           </div>
+
           {/* Quick Links */}
-          import Link from "next/link";
           <div>
             <h4 className="text-lg font-semibold text-white">Quick Links</h4>
             <ul className="mt-2 space-y-2">
@@ -40,8 +41,7 @@ export default function Footer() {
 
         {/* Footer Bottom */}
         <div className="border-t border-gray-700 mt-6 py-3 text-center text-gray-400 text-sm">
-          &copy; {new Date().getFullYear()} Gupta Trading Company. All rights
-          reserved.
+          &copy; {new Date().getFullYear()} Gupta Trading Company. All rights reserved.
         </div>
       </div>
     </footer>
