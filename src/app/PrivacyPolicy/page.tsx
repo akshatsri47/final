@@ -46,7 +46,7 @@ export default function TermsAndPrivacy() {
       <div className="w-full bg-green-700 py-8 px-4 relative overflow-hidden">
         <div className="max-w-4xl mx-auto relative z-10">
           <h1 className="text-3xl md:text-4xl font-bold text-white text-center">
-            Terms, Privacy & Shipping Policy
+            Terms & Conditions
           </h1>
           <p className="text-green-100 text-center mt-2">
             KrishDoctor - Nutrients for Healthy Growth

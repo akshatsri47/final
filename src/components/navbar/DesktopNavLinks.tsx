@@ -9,9 +9,10 @@ export default function DesktopNavLinks() {
       <Link href="/about" className="hover:text-white hover:underline underline-offset-4 transition-colors">About</Link>
       <Link href="/contact" className="hover:text-white hover:underline underline-offset-4 transition-colors">Contact</Link>
       <Link href="/warehouse" className="hover:text-white hover:underline underline-offset-4 transition-colors">Warehouse</Link>
-      <Link href="/PrivacyPolicy" className="hover:text-white hover:underline underline-offset-4 transition-colors">Privacy and Policy</Link>
+      <Link href="/PrivacyPolicy" className="hover:text-white hover:underline underline-offset-4 transition-colors">Terms and Conditions</Link>
 
       
     </div>
   );
 }
+  
