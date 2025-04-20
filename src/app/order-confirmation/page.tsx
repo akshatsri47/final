@@ -37,7 +37,7 @@ function OrderConfirmationContent() {
 
             try {
                 // Step 1: Verify Payment
-                const res = await axios.get(`http://localhost:3000/api/verifyOrder/${orderId}`, {
+                const res = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/verifyOrder/${orderId}`, {
                     headers: { userId },
                 });
 

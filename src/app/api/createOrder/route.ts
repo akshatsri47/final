@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     }
     const orderId = String((await cookies()).get('orderId')?.value);
 
-    const res = await axios.post('http://localhost:3000/api/phone-pe',{
+    const res = await axios.post(`${process.env.NEXT_PUBLIC_BASE_URL}/api/phone-pe`,{
       amount,
       merchantOrderId:orderId
 

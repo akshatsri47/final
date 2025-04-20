@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const res = await axios.post("http://localhost:3000/api/phone-pe/check-status", {
+    const res = await axios.post(`${process.env.NEXT_PUBLIC_BASE_URL}/api/phone-pe/check-status`, {
       merchantOrderId,
     });
 
