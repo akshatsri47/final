@@ -70,6 +70,24 @@ export const createRazorpayOrder = async (amount: number): Promise<string> => {
   }
 };
 
+export const createPhonePeOrder = async (amount: number): Promise<string> => {
+  try {
+    const res = await axios.post("/api/createOrder", {
+      amount: amount * 100,
+    });
+    
+    if (!res.data.success) {
+      throw new Error("Failed to create payment order");
+    }
+
+    return res.data.redirectUrl;
+  } catch (error) {
+    console.error("Error creating PhonePe order:", error);
+    throw error;
+  }
+};
+
+
 export const verifyRazorpayPayment = async (
   response: RazorpayResponse
 ): Promise<boolean> => {
@@ -137,4 +155,24 @@ export const initializeRazorpayPayment = (
 
   const payment = new (window ).Razorpay(paymentData);
   payment.open();
+};
+
+export const updateOrderStatus = async (orderId: string, status: string): Promise<boolean> => {
+  try {
+    const response = await axios.patch('/api/order', {
+      orderId,
+      status,
+    });
+
+    if (response.data.success) {
+      console.log('Order status updated successfully.');
+      return true;
+    } else {
+      console.error('Failed to update order status:', response.data.error);
+      return false;
+    }
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    return false;
+  }
 };

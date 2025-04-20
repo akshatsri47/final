@@ -30,6 +30,7 @@
     "lottie-web": "^5.12.2",
     "lucide-react": "^0.475.0",
     "next": "15.1.7",
+    "pg-sdk-node": "https://phonepe.mycloudrepo.io/public/repositories/phonepe-pg-sdk-node/releases/v2/phonepe-pg-sdk-node.tgz",
     "razorpay": "^2.9.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
