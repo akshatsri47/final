@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     console.log(amount,merchantOrderId)
     // const merchantOrderId = "M123";
     // const amount = 100;
-    const redirectUrl = `http://localhost:3000/order-confirmation?orderId=${merchantOrderId}`;
+    const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/order-confirmation?orderId=${merchantOrderId}`;
 
     const request = StandardCheckoutPayRequest.builder()
       .merchantOrderId(merchantOrderId)
