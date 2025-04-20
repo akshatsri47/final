@@ -127,7 +127,7 @@ export async function POST(request: Request) {
         const orderData = {
             order_id: orderId,
             order_date: new Date().toISOString().slice(0, 10),
-            pickup_location: "home",
+            pickup_location: 'Primary',
             billing_customer_name: address.name,
             billing_last_name: "",
             billing_address: address.line1,
@@ -166,7 +166,7 @@ export async function POST(request: Request) {
             }
         );
         
-        console.log("Shiprocket API Response:", response.data);
+        console.log("Shiprocket API Response:", response.data,response.data.data);
         await updateDoc(orderRef, { shiprocketTrackingId: response.data.order_id || "Not Available" });
         return NextResponse.json({ success: true, data: response.data });
     } catch (error: unknown) {

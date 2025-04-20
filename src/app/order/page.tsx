@@ -16,19 +16,18 @@ import {
   PaymentMethod,
 } from "../../components/Payementmethod";
 import {
-  createRazorpayOrder,
-  verifyRazorpayPayment,
   createShiprocketOrder,
-  initializeRazorpayPayment,
+  
+  createPhonePeOrder,
 } from "../../components/Orderservice";
 
 
 
-interface RazorpayResponse {
-  razorpay_order_id: string;
-  razorpay_payment_id: string;
-  razorpay_signature: string;
-}
+// interface RazorpayResponse {
+//   razorpay_order_id: string;
+//   razorpay_payment_id: string;
+//   razorpay_signature: string;
+// }
 
 export default function ConfirmOrderPage() {
   const router = useRouter();
@@ -91,34 +90,39 @@ export default function ConfirmOrderPage() {
     const totalAmount = calculateCartTotal(cart);
 
     try {
-      const orderId = await createRazorpayOrder(totalAmount);
+      const redirectUrl = await createPhonePeOrder(totalAmount);
+      if(!redirectUrl){
+        throw new Error('Internal Error During Payment Initiation');
+      }
 
-      initializeRazorpayPayment(
-        razorpayKey,
-        orderId,
-        totalAmount,
-        address,
-        async (response: RazorpayResponse) => {
-          try {
-            const isVerified = await verifyRazorpayPayment(response);
-            if (isVerified) {
-              const shiprocketOrderId = await createShiprocketOrder(
-                userId,
-                "ONLINE"
-              );
-              alert("Order placed successfully!");
-              router.push(`/order-confirmation?orderId=${shiprocketOrderId}`);
-            } else {
-              alert("Payment verification failed.");
-              setIsProcessing(false);
-            }
-          } catch (error) {
-            console.error("Error handling payment verification:", error);
-            alert("Error occurred while processing payment verification.");
-            setIsProcessing(false);
-          }
-        }
-      );
+      router.push(redirectUrl);
+
+      // initializeRazorpayPayment(
+      //   razorpayKey,
+      //   orderId,
+      //   totalAmount,
+      //   address,
+      //   async (response: RazorpayResponse) => {
+      //     try {
+      //       const isVerified = await verifyRazorpayPayment(response);
+      //       if (isVerified) {
+      //         const shiprocketOrderId = await createShiprocketOrder(
+      //           userId,
+      //           "ONLINE"
+      //         );
+      //         alert("Order placed successfully!");
+      //         router.push(`/order-confirmation?orderId=${shiprocketOrderId}`);
+      //       } else {
+      //         alert("Payment verification failed.");
+      //         setIsProcessing(false);
+      //       }
+      //     } catch (error) {
+      //       console.error("Error handling payment verification:", error);
+      //       alert("Error occurred while processing payment verification.");
+      //       setIsProcessing(false);
+      //     }
+      //   }
+      //);
     } catch (error) {
       console.error("Error creating order:", error);
       alert("Error occurred while creating order.");

@@ -8,9 +8,11 @@ import {
   where,
   query,
   getDocs,
+  updateDoc,
 } from "firebase/firestore";
 import { Order } from "../../../../types/types";
 import { cookies } from "next/headers";
+
 
 
 
@@ -189,5 +191,41 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error("Error fetching orders:", error);
     return NextResponse.json({ success: false, msg: "Error fetching orders", error }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const { orderId ,status} = await req.json();
+
+    if (!orderId) {
+      return NextResponse.json(
+        { success: false, error: "Missing orderId in request body" },
+        { status: 400 }
+      );
+    }
+
+    const orderRef = doc(db, "orders", orderId);
+    const orderSnap = await getDoc(orderRef);
+
+    if (!orderSnap.exists()) {
+      return NextResponse.json(
+        { success: false, error: "Order not found" },
+        { status: 404 }
+      );
+    }
+
+    await updateDoc(orderRef, { status: status });
+
+    return NextResponse.json(
+      { success: true, message: "Order status updated to shipping" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error updating order status:", error);
+    return NextResponse.json(
+      { success: false, error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
