@@ -52,6 +52,16 @@ export async function GET(req: NextRequest) {
         { status: 200 }
       );
     }
+    if(paymentState==="PENDING"){
+      return NextResponse.json(
+        {
+          success: false,
+          orderId: merchantOrderId,
+          msg: "Payment is Pending",
+        },
+        { status: 200 }
+      );
+    }
 
     // For other unexpected payment states
     return NextResponse.json(
