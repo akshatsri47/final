@@ -156,8 +156,7 @@ export default function ConfirmOrderPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-indigo-50 to-white py-12">
-      {/* Razorpay checkout script */}
-      <Script type="text/javascript" src="https://checkout.razorpay.com/v1/checkout.js" />
+     
 
       <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-lg p-8">
         <h1 className="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-8">

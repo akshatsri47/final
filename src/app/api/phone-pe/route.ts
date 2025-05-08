@@ -4,7 +4,7 @@ import { StandardCheckoutClient, Env, StandardCheckoutPayRequest } from 'pg-sdk-
 
 const clientId = process.env.PHONE_PE_CLIENT_ID || "";
 const clientSecret = process.env.PHONE_PE_CLIENT_SECRET || "";
-const clientVersion = Number(process.env.PHONE_PE_CLIENT_VERSION);
+const clientVersion = Number(process.env.PHONE_PE_CLIENT_VERSION)|| 1;
 const env = Env.PRODUCTION;
 
 const client = StandardCheckoutClient.getInstance(clientId, clientSecret, clientVersion, env);
