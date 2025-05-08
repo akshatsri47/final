@@ -2,7 +2,7 @@
 "use client"
 
 import axios from 'axios';
-import { Address } from '../../types/types';
+
 
 
 import { PaymentMethod } from '../components/Payementmethod';

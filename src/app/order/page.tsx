@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "../hooks/useCart";
 import { useUserId } from "../hooks/useId";
-import Script from "next/script";
+
 import { Address } from "../../../types/types";
 
 import { AddressCard } from "../../components/Addresscard";
