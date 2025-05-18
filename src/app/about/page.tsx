@@ -33,24 +33,7 @@ const AboutUs = () => {
   return (
     <div className="bg-white">
       {/* Hero Section */}
-      <div className="relative h-96 md:h-screen/2 overflow-hidden">
-        <Image 
-          src="/api/placeholder/1200/600" 
-          alt="Fertile farmland with crops" 
-          layout="fill" 
-          objectFit="cover"
-          className="brightness-75"
-        />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center px-4">
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">Our Story</h1>
-            <p className="text-xl text-white max-w-3xl mx-auto">
-              Nurturing soil and growing futures since 1995
-            </p>
-          </div>
-        </div>
-      </div>
-
+    
       {/* Mission Statement */}
       <div className="py-16 px-4 max-w-7xl mx-auto">
         <div className="animate-on-scroll opacity-0 translate-y-10 transition-all duration-700 ease-out">
@@ -59,7 +42,7 @@ const AboutUs = () => {
           </div>
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 text-gray-800">Our Mission</h2>
           <p className="text-xl text-center max-w-4xl mx-auto text-gray-600">
-            We are dedicated to revolutionizing agriculture through sustainable fertilizers that enhance soil health, maximize crop yields, and preserve our planet for future generations. Our innovative solutions empower farmers to grow more with less environmental impact.
+           For years, we have been serving our region with high-quality products and exceptional customer satisfaction and with proper scientific information. Now, we are bringing that same commitment and trust to the digital world. Welcome to [Krishi Doctor]—your go-to online destination for [Agri  products/services.
           </p>
         </div>
       </div>
@@ -71,10 +54,10 @@ const AboutUs = () => {
             <div className="animate-on-scroll opacity-0 translate-y-10 transition-all duration-700 ease-out">
               <h2 className="text-3xl font-bold mb-6 text-gray-800">Our Journey</h2>
               <p className="text-lg text-gray-600 mb-4">
-                Founded in 1995 by agricultural scientists with a vision for more sustainable farming, GreenGrow Fertilizers began as a small research lab focused on developing eco-friendly alternatives to conventional chemical fertilizers.
+              Our journey began 50 Years ago when generally more reliant on traditional methods of farming were being used, many farmers used to face heavy losses, only cash crops were in use even normal fertilizers seem like some magic for the farmers. So, those were the days when this organization was established and from those days till now we just have one vision to give our farmers the best. Over the years, we have built a reputation for quality, reliability, and customer trust, And now scaling ourself to many more farmers.
               </p>
               <p className="text-lg text-gray-600 mb-4">
-                Over the decades, we&aposve expanded our product range while staying true to our core values of innovation, sustainability, and farmer success. Today, we serve agricultural communities across the country with our premium fertilizer solutions.
+               As the world evolved, we realized the need to make shopping easier at the same time educating farmers with correct information regarding seed, chemicals and innovative methods . That’s why we decided to transform our traditional store into an eCommerce platform, so you can enjoy the same great products and service from the comfort of your home.
               </p>
               <p className="text-lg text-gray-600">
                 Our commitment to research and development ensures we stay at the cutting edge of agricultural science, continuously improving our formulations to meet the evolving needs of modern farming.
@@ -82,11 +65,11 @@ const AboutUs = () => {
             </div>
             <div className="relative h-80 md:h-96 rounded-lg overflow-hidden animate-on-scroll opacity-0 translate-y-10 transition-all duration-700 delay-300 ease-out">
               <Image 
-                src="/api/placeholder/600/800" 
+                src="/profile/downloads1.jpg" 
                 alt="Company history timeline" 
                 layout="fill" 
-                objectFit="cover"
-                className="rounded-lg"
+                
+                className="rounded-lg object-contain"
               />
             </div>
           </div>
@@ -133,27 +116,27 @@ const AboutUs = () => {
             {[
               {
                 icon: <Leaf className="text-green-600" size={28} />,
-                title: "Sustainability",
-                description: "We create products that nourish the soil while preserving natural ecosystems for future generations."
+                title: "Quality",
+                description: "Offering only the best products."
               },
               {
                 icon: <Sprout className="text-green-600" size={28} />,
-                title: "Innovation",
-                description: "Our continuous research drives breakthroughs in fertilizer technology for greater efficiency."
+                title: "Customer First",
+                description: "Ensuring a seamless shopping experience."
               },
               {
                 icon: <Users className="text-green-600" size={28} />,
-                title: "Partnership",
-                description: "We work alongside farmers as partners, providing solutions tailored to their specific needs."
+                title: "Trust & Transparency",
+                description: "Maintaining honest and fair business practices."
               },
               {
                 icon: <Mountain className="text-green-600" size={28} />,
-                title: "Quality",
-                description: "Every product undergoes rigorous testing to ensure consistent performance and results."
+                title: "Innovation",
+                description: "Embracing technology to serve you better."
               },
               {
                 icon: <Award className="text-green-600" size={28} />,
-                title: "Integrity",
+                title: "Accurate information",
                 description: "We maintain transparent practices and honest relationships with all stakeholders."
               },
               {
@@ -187,37 +170,40 @@ const AboutUs = () => {
           Meet the experts leading our mission to revolutionize sustainable agriculture
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+       
           {[
             {
-              name: "Dr. Emily Chen",
-              role: "Chief Executive Officer",
-              bio: "Ph.D. in Agricultural Science with 15+ years of experience in sustainable farming practices."
+              name: "Mr.Santosh Kumar Gupta",
+              role: "Founder ",
+              bio: "Mrs. Santosh Kumar Gupta established Gupta trading company since 1973 he served the farmers so well that today our region exports goods He has exceptional knowledge to all kinds of seasonal crops His leadership is truly remarkable, the vision he has is truly for the farmers wealth, The knowledge and skill he has from the experience is exceptional for farm level work His 51 years of experience in agricultural practices has always shown good colours in farmers life",
+              image: "/profile/char1.jpg"
             },
             {
-              name: "Michael Rodriguez",
-              role: "Chief Operations Officer",
-              bio: "Former farmer turned executive with deep understanding of agricultural supply chains."
+              name: "Pankaj Gupta ",
+              role: "Founder ",
+              bio: "[Mr. Pankaj Gupta fully joined our organization in 1995 after completing his diploma in agriculture from Manage Hyderabad he has been serving the farmers for 32 years now and coming, he has been walking passionately in the leadership of his father Mr. Santosh Kumar Gupta, he has also awarded by many national fertilizer companies and also maestro for the management of warehouses which comes under Gupta Trading Company for truly devoted for farmers.",
+              image: "/profile/char5.jpg"
+            },
+               {
+              name: "Sumit Gupta",
+              role: "Founder",
+              bio: "Mr. Sumit Gupta joined our organization in 1997 after completing his diploma in agriculture from Manage Hyderabad, he has been serving the farmers for 30 years now and coming, he has been walking passionately in the leadership of his father Mr. Santosh Kumar Gupta, he has also awarded by many national fertilizer companies and many national and international chemical companies for truly devoted for farmers.",
+              image: "/profile/char2.jpg"
             },
             {
-              name: "Dr. Sarah Johnson",
-              role: "Head of Research & Development",
-              bio: "Leading our innovation lab with expertise in soil microbiology and plant nutrition."
+              name: "Anil Kumar Shukla",
+              role: "Partner Advisor ",
+              bio: "Mr. Anil Kumar Shukla joined Gupta trading company in 2023. He contributed a lot to this organization. His experience and expertise and exceptional knowledge, helped farmers very well. He is gold medalist in BSC Ag at JNKVV Jabalpur also MSC in Zoology (Ichthyology). He served in Agriculture Department of MP for 37 years and passionately served the farmers, now he is serving our organization as an chief advisor and continues following his passion as an Agronomist.",
+              image: "/profile/char3.jpg"
             },
             {
-              name: "Robert Williams",
-              role: "Sales Director",
-              bio: "Building lasting relationships with farming communities across the country."
+              name: "Samarth Gupta",
+              role: " Co-Founder ",
+              bio: "Mr. Samarth Gupta joined Gupta Trading company officially at 2024.After completing his diploma in Agriculture from Manage Hyderabad and Bachelor’s in Business Administration from Amity University Rajasthan and now currently a student of ABM at Symbiosis University his fascinating career in business studies giving wings to our organization and exploring technology to reach out to farmers nationally and also by furnishing Farmers with our 51 year of agricultural experience with will definitely now help farmers Nationally to showcase their true colors.",
+              image: "/profile/char4.jpg"
             },
-            {
-              name: "Aisha Patel",
-              role: "Sustainability Officer",
-              bio: "Ensuring our products and practices align with our environmental commitments."
-            },
-            {
-              name: "James Thompson",
-              role: "Customer Success Manager",
-              bio: "Dedicated to helping farmers achieve optimal results with our products."
-            }
+         
+          
           ].map((member, index) => (
             <div 
               key={index} 
@@ -226,10 +212,10 @@ const AboutUs = () => {
             >
               <div className="h-64 relative">
                 <Image 
-                  src={`/api/placeholder/400/${300 + index * 20}`} 
+                  src={member.image} 
                   alt={member.name} 
-                  layout="fill" 
-                  objectFit="cover"
+                  layout="fill"
+                  className='object-contain'
                 />
               </div>
               <div className="p-6">
