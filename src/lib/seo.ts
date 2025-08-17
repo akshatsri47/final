@@ -49,15 +49,15 @@ export function generateMetadata(config: SEOConfig): Metadata {
   } = config
 
   const metadata: Metadata = {
-    title: `${title} | PaceIT - Agricultural Solutions`,
+    title: `${title} | Krishdoctor - Agricultural Solutions`,
     description,
     keywords: keywords.join(', '),
     authors: author ? [{ name: author }] : undefined,
     openGraph: {
-      title: `${title} | PaceIT`,
+      title: `${title} | Krishdoctor`,
       description,
       url,
-      siteName: 'PaceIT',
+      siteName: 'Krishdoctor',
       images: [
         {
           url: image,
@@ -75,7 +75,7 @@ export function generateMetadata(config: SEOConfig): Metadata {
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} | PaceIT`,
+      title: `${title} | Krishdoctor`,
       description,
       images: [image],
     },
@@ -158,8 +158,8 @@ export function generateOrganizationStructuredData(): JsonLd {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'PaceIT',
-    url: 'https://paceit.com',
-    logo: 'https://paceit.com/logo.png',
+    url: 'https://www.krishdoctor.in/',
+    logo: 'https://www.krishdoctor.in/logo.png',
     description:
       'Leading agricultural solutions provider offering high-quality products for farmers',
     address: {
@@ -174,7 +174,7 @@ export function generateOrganizationStructuredData(): JsonLd {
     },
     sameAs: [
       'https://facebook.com/paceit',
-      'https://twitter.com/paceit',
+      'https://twitter.com/paceit', 
       'https://instagram.com/paceit',
     ],
   }
@@ -229,7 +229,7 @@ export function generateLocalBusinessStructuredData(): JsonLd {
     '@type': 'LocalBusiness',
     name: 'PaceIT',
     description: 'Agricultural solutions and products for farmers',
-    url: 'https://paceit.com',
+    url: 'https://www.krishdoctor.in/',
     telephone: '+91-XXXXXXXXXX',
     address: {
       '@context': 'https://schema.org',
@@ -244,6 +244,6 @@ export function generateLocalBusinessStructuredData(): JsonLd {
       longitude: 78.9629,
     },
     openingHours: 'Mo-Su 09:00-18:00',
-    priceRange: '₹₹',
+    priceRange: '10000₹₹',
   }
 }
