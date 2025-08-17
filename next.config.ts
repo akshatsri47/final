@@ -19,7 +19,42 @@ const nextConfig: NextConfig = {
           { key: "Cross-Origin-Embedder-Policy", value: "require-corp" }, // Optional
         ],
       },
+      {
+        source: "/(.*)",
+        headers: [
+          {
+            key: "X-Content-Type-Options",
+            value: "nosniff",
+          },
+          {
+            key: "X-Frame-Options",
+            value: "DENY",
+          },
+          {
+            key: "X-XSS-Protection",
+            value: "1; mode=block",
+          },
+          {
+            key: "Referrer-Policy",
+            value: "strict-origin-when-cross-origin",
+          },
+        ],
+      },
     ];
+  },
+
+  // Enable compression for better performance
+  compress: true,
+
+  // SWC minification is enabled by default in Next.js 13+
+
+  // Generate static exports for better SEO
+  trailingSlash: false,
+
+  // Enable experimental features for better performance
+  experimental: {
+    optimizeCss: true,
+    optimizePackageImports: ['lucide-react', 'framer-motion'],
   },
 };
 

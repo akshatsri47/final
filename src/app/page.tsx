@@ -1,4 +1,4 @@
-// pages/ProductList.tsx
+import { Metadata } from "next";
 import CategorySection from "@/components/CategorySection";
 import { Product } from "../../types/types";
 import ShopByCategory from "../components/ShopByCategory"; 
@@ -9,9 +9,42 @@ import Slider from "@/components/Slider";
 import CropDiseaseChecker from "@/components/CropDiseaseChecker";
 import QuestionnaireAlert from "@/components/QuestionnaireAlert";
 import { normalizeCategory } from "../../utils/normalizeCategory";
-
+import StructuredDataComponent from "@/components/StructuredData";
+import { generateLocalBusinessStructuredData, generateFAQStructuredData } from "@/lib/seo";
 
 export const dynamic = "force-dynamic"; // Forces SSR
+
+export const metadata: Metadata = {
+  title: "Agricultural Solutions & Products",
+  description: "Discover high-quality agricultural products including herbicides, pesticides, fertilizers, and crop protection solutions. Expert advice and reliable products for modern farming.",
+  keywords: [
+    "agricultural products",
+    "herbicides",
+    "pesticides", 
+    "fertilizers",
+    "crop protection",
+    "farming solutions",
+    "agriculture products India",
+    "weed control",
+    "plant protection"
+  ],
+  openGraph: {
+    title: "Agricultural Solutions & Products | PaceIT",
+    description: "Discover high-quality agricultural products including herbicides, pesticides, fertilizers, and crop protection solutions.",
+    url: "https://paceit.com",
+    images: [
+      {
+        url: "/banner1.jpg",
+        width: 1200,
+        height: 630,
+        alt: "PaceIT Agricultural Solutions",
+      },
+    ],
+  },
+  alternates: {
+    canonical: "https://paceit.com",
+  },
+};
 
 async function fetchProducts(): Promise<{ products: Product[]; error: string | null }> {
   try {
@@ -57,9 +90,28 @@ export default async function ProductList() {
     },
     {} as { [key: string]: Product[] }
   );
+
+  // FAQ data for structured data
+  const faqs = [
+    {
+      question: "What agricultural products does PaceIT offer?",
+      answer: "PaceIT offers a comprehensive range of agricultural products including herbicides, pesticides, fertilizers, and crop protection solutions for modern farming needs."
+    },
+    {
+      question: "How can I get expert advice on crop protection?",
+      answer: "Our team of agricultural experts provides personalized advice through our questionnaire system and direct consultation services to help you choose the right products."
+    },
+    {
+      question: "Do you ship agricultural products across India?",
+      answer: "Yes, we provide reliable shipping services across India with secure packaging and tracking for all our agricultural products."
+    }
+  ];
   
   return (
     <>
+      <StructuredDataComponent data={generateLocalBusinessStructuredData()} />
+      <StructuredDataComponent data={generateFAQStructuredData(faqs)} />
+      
       {/* HERO / SLIDER */}
       <Slider />
       
