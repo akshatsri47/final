@@ -14,6 +14,9 @@ export default function MobileMenu() {
         <Link href="/cart" className="flex items-center py-3 hover:bg-white/10 px-2 rounded-lg transition-colors">
           Cart
         </Link>
+        <Link href="/blogs" className="flex items-center py-3 hover:bg-white/10 px-2 rounded-lg transition-colors">
+          Blogs
+        </Link>
         <Link href="/contact" className="flex items-center py-3 hover:bg-white/10 px-2 rounded-lg transition-colors">
           Contact
         </Link>
