@@ -3,6 +3,7 @@ import { db } from "../../../../utils/firebase";
 import { doc, getDoc,updateDoc } from "firebase/firestore";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import ShiprocketTokenManager from "@/lib/shiprocketAuth";
 
 
 
@@ -98,17 +99,11 @@ export async function POST(request: Request) {
             },{status:404})
         }
 
-        const token = process.env.SHIPROCKET_API_TOKEN;
+        // Get valid token from token manager
+        const tokenManager = ShiprocketTokenManager.getInstance();
+        const token = await tokenManager.getValidToken();
 
-        if (!token) {
-            console.error("Shiprocket API token is missing.");
-            return NextResponse.json(
-                { success: false, error: "Shiprocket API token is not configured." },
-                { status: 500 }
-            );
-        }
-
-        console.log("Shiprocket API Token acquired.");
+        console.log("Shiprocket API Token acquired from token manager.");
 
         // ✅ Prepare the order data for Shiprocket
         const orderItems = cartItems.map((item: CartItem) => ({
