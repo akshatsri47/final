@@ -7,7 +7,7 @@ export async function POST() {
         console.log("Manual Shiprocket token refresh requested");
         
         const tokenManager = ShiprocketTokenManager.getInstance();
-        const newToken = await tokenManager.forceRefreshToken();
+        await tokenManager.forceRefreshToken();
         
         return NextResponse.json({ 
             success: true, 

@@ -11,8 +11,8 @@ interface TokenCache {
 interface FirestoreTokenData {
   token: string;
   expiresAt: number;
-  createdAt: any; // Firestore timestamp
-  updatedAt: any; // Firestore timestamp
+  createdAt: unknown; // Firestore timestamp
+  updatedAt: unknown; // Firestore timestamp
 }
 
 class ShiprocketTokenManager {
@@ -163,9 +163,9 @@ class ShiprocketTokenManager {
       let token: string;
       try {
         token = await this.getTokenFromFirestore();
-      } catch (error) {
+      } catch (firestoreError) {
         // If Firestore fails, fall back to env variable for initial setup
-        console.log('Falling back to environment variable token');
+        console.log('Falling back to environment variable token', firestoreError);
         token = process.env.SHIPROCKET_API_TOKEN!;
         
         if (!token) {
