@@ -1,22 +1,22 @@
 // ./src/lib/seo.ts
-import { Metadata } from 'next'
+import { Metadata } from "next";
 
 /* =========================
    Public Types
    ========================= */
 
 export interface SEOConfig {
-  title: string
-  description: string
-  keywords?: string[]
-  image?: string
-  url?: string
-  type?: 'website' | 'article'
-  publishedTime?: string
-  modifiedTime?: string
-  author?: string
-  section?: string
-  tags?: string[]
+  title: string;
+  description: string;
+  keywords?: string[];
+  image?: string;
+  url?: string;
+  type?: "website" | "article";
+  publishedTime?: string;
+  modifiedTime?: string;
+  author?: string;
+  section?: string;
+  tags?: string[];
 }
 
 /**
@@ -24,10 +24,10 @@ export interface SEOConfig {
  * while staying flexible for schema.org payloads.
  */
 export type JsonLd = {
-  '@context': 'https://schema.org'
-  '@type': string
-  [key: string]: unknown
-}
+  "@context": "https://schema.org";
+  "@type": string;
+  [key: string]: unknown;
+};
 
 /* =========================
    Metadata Generator
@@ -38,26 +38,26 @@ export function generateMetadata(config: SEOConfig): Metadata {
     title,
     description,
     keywords = [],
-    image = '/banner1.jpg',
+    image = "/banner1.jpg",
     url,
-    type = 'website',
+    type = "website",
     publishedTime,
     modifiedTime,
     author,
     section,
     tags = [],
-  } = config
+  } = config;
 
   const metadata: Metadata = {
     title: `${title} | Krishdoctor - Agricultural Solutions`,
     description,
-    keywords: keywords.join(', '),
+    keywords: keywords.join(", "),
     authors: author ? [{ name: author }] : undefined,
     openGraph: {
       title: `${title} | Krishdoctor`,
       description,
       url,
-      siteName: 'Krishdoctor',
+      siteName: "Krishdoctor",
       images: [
         {
           url: image,
@@ -74,7 +74,7 @@ export function generateMetadata(config: SEOConfig): Metadata {
       tags,
     },
     twitter: {
-      card: 'summary_large_image',
+      card: "summary_large_image",
       title: `${title} | Krishdoctor`,
       description,
       images: [image],
@@ -85,17 +85,17 @@ export function generateMetadata(config: SEOConfig): Metadata {
       googleBot: {
         index: true,
         follow: true,
-        'max-video-preview': -1,
-        'max-image-preview': 'large',
-        'max-snippet': -1,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
       },
     },
     alternates: {
       canonical: url,
     },
-  }
+  };
 
-  return metadata
+  return metadata;
 }
 
 /* =========================
@@ -103,18 +103,18 @@ export function generateMetadata(config: SEOConfig): Metadata {
    ========================= */
 
 export interface ProductPrice {
-  packageSize: string
-  price: number
+  packageSize: string;
+  price: number;
 }
 
 export interface ProductInput {
-  id: string
-  name: string
-  description: string
-  images: string[]
-  pricing: ProductPrice[]
-  category: string
-  url: string
+  id: string;
+  name: string;
+  description: string;
+  images: string[];
+  pricing: ProductPrice[];
+  category: string;
+  url: string;
 }
 
 /**
@@ -123,127 +123,127 @@ export interface ProductInput {
  * you can switch `image` to `product.images` (array) safely.
  */
 export function generateProductStructuredData(product: ProductInput): JsonLd {
-  const lowestPrice = Math.min(...product.pricing.map((p) => p.price))
+  const lowestPrice = Math.min(...product.pricing.map((p) => p.price));
 
   return {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
+    "@context": "https://schema.org",
+    "@type": "Product",
     name: product.name,
     description: product.description,
-    image: product.images[0] ?? '', // single string to satisfy Next Metadata constraints
+    image: product.images[0] ?? "", // single string to satisfy Next Metadata constraints
     category: product.category,
     url: product.url,
     offers: {
-      '@context': 'https://schema.org',
-      '@type': 'Offer',
+      "@context": "https://schema.org",
+      "@type": "Offer",
       price: lowestPrice,
-      priceCurrency: 'INR',
-      availability: 'https://schema.org/InStock',
+      priceCurrency: "INR",
+      availability: "https://schema.org/InStock",
       seller: {
-        '@context': 'https://schema.org',
-        '@type': 'Organization',
-        name: 'PaceIT',
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        name: "KrishDoctor",
       },
     },
     brand: {
-      '@context': 'https://schema.org',
-      '@type': 'Brand',
-      name: 'PaceIT',
+      "@context": "https://schema.org",
+      "@type": "Brand",
+      name: "KrishDoctor",
     },
-  }
+  };
 }
 
 export function generateOrganizationStructuredData(): JsonLd {
   return {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: 'PaceIT',
-    url: 'https://www.krishdoctor.in/',
-    logo: 'https://www.krishdoctor.in/logo.png',
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "KrishDoctor",
+    url: "https://www.krishdoctor.in/",
+    logo: "https://www.krishdoctor.in/logo.png",
     description:
-      'Leading agricultural solutions provider offering high-quality products for farmers',
+      "Leading agricultural solutions provider offering high-quality products for farmers",
     address: {
-      '@context': 'https://schema.org',
-      '@type': 'PostalAddress',
-      addressCountry: 'IN',
+      "@context": "https://schema.org",
+      "@type": "PostalAddress",
+      addressCountry: "IN",
     },
     contactPoint: {
-      '@context': 'https://schema.org',
-      '@type': 'ContactPoint',
-      contactType: 'customer service',
+      "@context": "https://schema.org",
+      "@type": "ContactPoint",
+      contactType: "customer service",
     },
     sameAs: [
-      'https://facebook.com/paceit',
-      'https://twitter.com/paceit', 
-      'https://instagram.com/paceit',
+      "https://facebook.com/krishdoctor",
+      "https://twitter.com/krishdoctor",
+      "https://instagram.com/krishdoctor",
     ],
-  }
+  };
 }
 
 export interface BreadcrumbItem {
-  name: string
-  url: string
+  name: string;
+  url: string;
 }
 
 export function generateBreadcrumbStructuredData(
-  breadcrumbs: BreadcrumbItem[],
+  breadcrumbs: BreadcrumbItem[]
 ): JsonLd {
   return {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
     itemListElement: breadcrumbs.map((crumb, index) => ({
-      '@context': 'https://schema.org',
-      '@type': 'ListItem',
+      "@context": "https://schema.org",
+      "@type": "ListItem",
       position: index + 1,
       name: crumb.name,
       item: crumb.url,
     })),
-  }
+  };
 }
 
 export interface FAQItem {
-  question: string
-  answer: string
+  question: string;
+  answer: string;
 }
 
 export function generateFAQStructuredData(faqs: FAQItem[]): JsonLd {
   return {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
     mainEntity: faqs.map((faq) => ({
-      '@context': 'https://schema.org',
-      '@type': 'Question',
+      "@context": "https://schema.org",
+      "@type": "Question",
       name: faq.question,
       acceptedAnswer: {
-        '@context': 'https://schema.org',
-        '@type': 'Answer',
+        "@context": "https://schema.org",
+        "@type": "Answer",
         text: faq.answer,
       },
     })),
-  }
+  };
 }
 
 export function generateLocalBusinessStructuredData(): JsonLd {
   return {
-    '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
-    name: 'PaceIT',
-    description: 'Agricultural solutions and products for farmers',
-    url: 'https://www.krishdoctor.in/',
-    telephone: '+91-XXXXXXXXXX',
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    name: "KrishDoctor",
+    description: "Agricultural solutions and products for farmers",
+    url: "https://www.krishdoctor.in/",
+    telephone: "+91-XXXXXXXXXX",
     address: {
-      '@context': 'https://schema.org',
-      '@type': 'PostalAddress',
-      addressCountry: 'IN',
-      addressRegion: 'India',
+      "@context": "https://schema.org",
+      "@type": "PostalAddress",
+      addressCountry: "IN",
+      addressRegion: "India",
     },
     geo: {
-      '@context': 'https://schema.org',
-      '@type': 'GeoCoordinates',
+      "@context": "https://schema.org",
+      "@type": "GeoCoordinates",
       latitude: 20.5937,
       longitude: 78.9629,
     },
-    openingHours: 'Mo-Su 09:00-18:00',
-    priceRange: '10000₹₹',
-  }
+    openingHours: "Mo-Su 09:00-18:00",
+    priceRange: "10000₹₹",
+  };
 }
