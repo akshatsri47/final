@@ -11,6 +11,7 @@ export const dynamic = "force-dynamic";
 function OrderConfirmationContent() {
     const searchParams = useSearchParams();
     const orderId = searchParams.get("orderId");
+    const paymentMethod = searchParams.get("paymentMethod"); // Get payment method from URL
 
     const [success, setSuccess] = useState(false);
     const [shipRocketId, setShipRocketId] = useState("");
@@ -18,10 +19,7 @@ function OrderConfirmationContent() {
     const [error, setError] = useState("");
 
     useEffect(() => {
-
-        
-
-        const verifyAndCreateOrder = async () => {
+        const handleOrderConfirmation = async () => {
             if (!orderId) {
                 setError("No Order ID Found. Please contact support.");
                 setLoading(false);
@@ -36,33 +34,68 @@ function OrderConfirmationContent() {
             }
 
             try {
-                // Step 1: Verify Payment
+                console.log("Processing order confirmation:", { orderId, paymentMethod });
+
+                // Handle COD orders differently - no payment verification needed
+                if (paymentMethod === "COD") {
+                    console.log("Processing COD order confirmation");
+                    setSuccess(true);
+                    setShipRocketId(orderId); // For COD, orderId is the shiprocket ID
+                    
+                    // Update order status for COD
+                    try {
+                        await updateOrderStatus(orderId, "COD Order Confirmed - Ready to Ship");
+                    } catch (statusError) {
+                        console.warn("Failed to update order status:", statusError);
+                        // Don't fail the whole process if status update fails
+                    }
+                    
+                    setLoading(false);
+                    return;
+                }
+
+                // Handle Online Payment orders - verify payment first
+                console.log("Verifying online payment for order:", orderId);
+                
                 const res = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/verifyOrder/${orderId}`, {
                     headers: { userId },
                 });
 
-                const { success } = res.data;
-                if (success) {
-                    setSuccess(true);
+                console.log("Payment verification response:", res.data);
 
+                const { success: paymentSuccess } = res.data;
+                if (paymentSuccess) {
+                    setSuccess(true);
                     
                     const shipId = await createShiprocketOrder(userId, "ONLINE");
-                    await updateOrderStatus(orderId,"Ready To Ship !")
                     setShipRocketId(shipId);
+                    
+                    // Update order status for successful payment
+                    try {
+                        await updateOrderStatus(orderId, "Payment Verified - Ready to Ship!");
+                    } catch (statusError) {
+                        console.warn("Failed to update order status:", statusError);
+                        // Don't fail the whole process if status update fails
+                    }
                 } else {
-                    await updateOrderStatus(orderId,"Failed Payment !")
-                    setError("Order verification failed. Please contact support.");
+                    // Update order status for failed payment
+                    try {
+                        await updateOrderStatus(orderId, "Payment Failed");
+                    } catch (statusError) {
+                        console.warn("Failed to update order status:", statusError);
+                    }
+                    setError("Payment verification failed. Please contact support.");
                 }
             } catch (err) {
-                console.error(err);
+                console.error("Order confirmation error:", err);
                 setError("Something went wrong. Please try again.");
             } finally {
                 setLoading(false);
             }
         };
 
-        verifyAndCreateOrder();
-    }, [orderId]);
+        handleOrderConfirmation();
+    }, [orderId, paymentMethod]);
 
     if (loading) {
         return <p className="text-center py-10">Loading...</p>;
@@ -78,16 +111,32 @@ function OrderConfirmationContent() {
                 </h1>}
                 {error && !success ? (
                     <p className="text-red-500">{error}</p>
-                ) : (
+                ) : success ? (
                     <>
+                        {paymentMethod === "COD" ? (
+                            <>
+                                <p className="text-lg text-gray-700 mb-4">
+                                    Your COD order has been confirmed!
+                                </p>
+                                <p className="text-sm text-gray-600 mb-6">
+                                    Payment will be collected upon delivery.
+                                </p>
+                            </>
+                        ) : (
+                            <>
+                                <p className="text-lg text-gray-700 mb-4">
+                                    Payment successful! Your order is confirmed.
+                                </p>
+                            </>
+                        )}
                         <p className="text-lg text-gray-700 mb-6">
-                            Your Shiprocket Order ID is:
+                            Your Order ID is:
                         </p>
                         <p className="text-2xl font-mono text-green-800 bg-green-100 p-4 rounded-lg">
                             {shipRocketId}
                         </p>
                     </>
-                )}
+                ) : null}
                 <Link
                     href="/orders"
                     className="mt-8 inline-block bg-green-500 text-white px-6 py-3 rounded-md shadow hover:bg-green-600 transition"

@@ -17,8 +17,8 @@ import {
 } from "../../components/Payementmethod";
 import {
   createShiprocketOrder,
-  
   createPhonePeOrder,
+  updateOrderStatus,
 } from "../../components/Orderservice";
 
 
@@ -67,16 +67,36 @@ export default function ConfirmOrderPage() {
 
   // Handle COD order
   const handleCODOrder = async () => {
-    if (!userId || !address) return;
+    if (!userId || !address) {
+      alert("Please ensure you're logged in and have an address selected.");
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
-      const orderId = await createShiprocketOrder(userId, "COD");
-      alert("Order placed successfully!");
-      router.push(`/order-confirmation?orderId=${orderId}`);
+      // First create the order in database
+      const orderResponse = await api.post('/order', { userId });
+
+      if (!orderResponse.data.success) {
+        throw new Error(orderResponse.data.error || 'Failed to create order');
+      }
+
+      const orderId = orderResponse.data.data.id;
+      console.log("Order created for COD:", orderId);
+
+      // Then create shiprocket order
+      const shiprocketOrderId = await createShiprocketOrder(userId, "COD");
+
+      // Update order status to COD confirmed
+      await updateOrderStatus(orderId, "COD Order Confirmed - Ready to Ship");
+
+      alert("COD Order placed successfully!");
+      // Redirect with payment method parameter to distinguish from online payments
+      router.push(`/order-confirmation?orderId=${shiprocketOrderId || orderId}&paymentMethod=COD`);
     } catch (error) {
       console.error("Error processing COD order:", error);
-      alert("Failed to process your order. Please try again.");
+      alert(`Failed to process your order: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsProcessing(false);
     }
@@ -84,18 +104,33 @@ export default function ConfirmOrderPage() {
 
   // Handle Online Payment
   const handleOnlinePayment = async () => {
-    if (!userId || !address) return;
+    if (!userId || !address) {
+      alert("Please ensure you're logged in and have an address selected.");
+      return;
+    }
+
     setIsProcessing(true);
 
     const totalAmount = calculateCartTotal(cart);
 
     try {
+      // First create the order in database
+      const orderResponse = await api.post('/order', { userId });
+
+      if (!orderResponse.data.success) {
+        throw new Error(orderResponse.data.error || 'Failed to create order');
+      }
+
+      console.log("Order created for online payment:", orderResponse.data.data.id);
+
+      // Then create payment
       const redirectUrl = await createPhonePeOrder(totalAmount);
-      if(!redirectUrl){
+      if (!redirectUrl) {
         throw new Error('Internal Error During Payment Initiation');
       }
 
-      router.push(redirectUrl);
+      console.log("Redirecting to PhonePe payment:", redirectUrl);
+      window.location.href = redirectUrl;
 
       // initializeRazorpayPayment(
       //   razorpayKey,
@@ -156,7 +191,7 @@ export default function ConfirmOrderPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-indigo-50 to-white py-12">
-     
+
 
       <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-lg p-8">
         <h1 className="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-8">
@@ -189,9 +224,8 @@ export default function ConfirmOrderPage() {
           <button
             onClick={handlePlaceOrder}
             disabled={isProcessing}
-            className={`${
-              isProcessing ? "bg-gray-400" : "bg-green-500 hover:bg-green-600"
-            } transition-colors text-white px-8 py-4 rounded-full text-xl font-semibold shadow-lg`}
+            className={`${isProcessing ? "bg-gray-400" : "bg-green-500 hover:bg-green-600"
+              } transition-colors text-white px-8 py-4 rounded-full text-xl font-semibold shadow-lg`}
           >
             {isProcessing
               ? "⏳ Processing..."

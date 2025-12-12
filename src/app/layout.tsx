@@ -9,16 +9,16 @@ import { CouponProvider } from "./context/CouponContext";
 import GoogleTranslateScript from "@/components/GoogleTranslateScript";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://paceit.com'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.krishdoctor.in'),
   title: {
-    default: 'PaceIT - Agricultural Solutions & Products',
-    template: '%s | PaceIT - Agricultural Solutions'
+    default: 'KrishDoctor - Agricultural Solutions & Products',
+    template: '%s | KrishDoctor - Agricultural Solutions'
   },
   description: 'Leading agricultural solutions provider offering high-quality products for farmers. Shop herbicides, pesticides, fertilizers and more.',
   keywords: ['agricultural products', 'herbicides', 'pesticides', 'fertilizers', 'farming', 'agriculture', 'crop protection', 'India'],
-  authors: [{ name: 'PaceIT' }],
-  creator: 'PaceIT',
-  publisher: 'PaceIT',
+  authors: [{ name: 'KrishDoctor' }],
+  creator: 'KrishDoctor',
+  publisher: 'KrishDoctor',
   formatDetection: {
     email: false,
     address: false,
@@ -27,22 +27,22 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_IN',
-    url: 'https://paceit.com',
-    siteName: 'PaceIT',
-    title: 'PaceIT - Agricultural Solutions & Products',
+    url: 'https://www.krishdoctor.in',
+    siteName: 'KrishDoctor',
+    title: 'KrishDoctor - Agricultural Solutions & Products',
     description: 'Leading agricultural solutions provider offering high-quality products for farmers',
     images: [
       {
         url: '/banner1.jpg',
         width: 1200,
         height: 630,
-        alt: 'PaceIT Agricultural Solutions',
+        alt: 'KrishDoctor Agricultural Solutions',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'PaceIT - Agricultural Solutions & Products',
+    title: 'KrishDoctor - Agricultural Solutions & Products',
     description: 'Leading agricultural solutions provider offering high-quality products for farmers',
     images: ['/banner1.jpg'],
   },
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: 'https://paceit.com',
+    canonical: 'https://www.krishdoctor.in',
   },
   verification: {
     google: 'your-google-verification-code',
