@@ -15,10 +15,6 @@ export default function BlogsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [categories, setCategories] = useState<string[]>([]);
 
-  useEffect(() => {
-    fetchBlogs();
-  }, [selectedCategory]);
-
   const fetchBlogs = useCallback(async () => {
     try {
       setLoading(true);
@@ -37,6 +33,10 @@ export default function BlogsPage() {
       setLoading(false);
     }
   }, [selectedCategory]);
+
+  useEffect(() => {
+    fetchBlogs();
+  }, [fetchBlogs]);
 
   const formatDate = (timestamp: unknown) => {
     if (!timestamp) return '';

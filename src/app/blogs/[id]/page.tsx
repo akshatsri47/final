@@ -17,12 +17,6 @@ export default function BlogDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (blogId) {
-      fetchBlog();
-    }
-  }, [blogId]);
-
   const fetchBlog = useCallback(async () => {
     try {
       setLoading(true);
@@ -55,6 +49,12 @@ export default function BlogDetailPage() {
       setLoading(false);
     }
   }, [blogId]);
+
+  useEffect(() => {
+    if (blogId) {
+      fetchBlog();
+    }
+  }, [blogId, fetchBlog]);
 
   const formatDate = (timestamp: unknown) => {
     if (!timestamp) return '';
