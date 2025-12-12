@@ -3,8 +3,8 @@ import { StandardCheckoutClient, Env } from 'pg-sdk-node';
 
 const clientId = process.env.PHONE_PE_CLIENT_ID || "";
 const clientSecret = process.env.PHONE_PE_CLIENT_SECRET || "";
-const clientVersion = Number(process.env.PHONE_PE_CLIENT_VERSION);
-const env = Env.PRODUCTION;
+const clientVersion = Number(process.env.PHONE_PE_CLIENT_VERSION) || 1;
+const env = process.env.PHONE_PE_ENVIRONMENT === 'PRODUCTION' ? Env.PRODUCTION : Env.SANDBOX;
 
 const client = StandardCheckoutClient.getInstance(clientId, clientSecret, clientVersion, env);
 
@@ -20,6 +20,7 @@ export async function POST(req: NextRequest) {
       console.log(response.state);
   
       return NextResponse.json({
+        success: true,
         merchantOrderId,
         paymentState: response.state,
       });
