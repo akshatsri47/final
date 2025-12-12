@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://paceit.com/sitemap.xml
+Sitemap: https://www.krishdoctor.in/sitemap.xml
 
 # Disallow admin and private areas
 Disallow: /api/
