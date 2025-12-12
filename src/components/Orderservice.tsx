@@ -159,20 +159,30 @@ export const createShiprocketOrder = async (
 
 export const updateOrderStatus = async (orderId: string, status: string): Promise<boolean> => {
   try {
+    console.log(`Updating order status: ${orderId} -> ${status}`);
+    
     const response = await axios.patch('/api/order', {
       orderId,
       status,
+    }, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
     });
 
     if (response.data.success) {
-      console.log('Order status updated successfully.');
+      console.log('✅ Order status updated successfully:', status);
       return true;
     } else {
-      console.error('Failed to update order status:', response.data.error);
+      console.error('❌ Failed to update order status:', response.data.error);
       return false;
     }
   } catch (error) {
-    console.error('Error updating order status:', error);
+    console.error('❌ Error updating order status:', error);
+    if (axios.isAxiosError(error)) {
+      console.error('Response data:', error.response?.data);
+      console.error('Status code:', error.response?.status);
+    }
     return false;
   }
 };
