@@ -5,21 +5,28 @@ import jwt from "jsonwebtoken";
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
 export function middleware(req: NextRequest) {
+  // This middleware only runs on /dashboard routes (see matcher config below)
   const token = req.cookies.get("authToken");
 
-  if (!token && req.nextUrl.pathname.startsWith("/dashboard")) {
-    return NextResponse.redirect(new URL("/login", req.url));
+  // If no token, redirect to auth page
+  if (!token || !token.value) {
+    return NextResponse.redirect(new URL("/auth", req.url));
   }
 
+  // Verify JWT token
   try {
-    const tokenValue = token?.value;
-    if (!tokenValue) {
-      return NextResponse.redirect(new URL("/login", req.url));
-    }
-    jwt.verify(tokenValue, JWT_SECRET);
+    jwt.verify(token.value, JWT_SECRET);
+    return NextResponse.next();
   } catch (err) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    // Token is invalid or expired, redirect to auth page
+    return NextResponse.redirect(new URL("/auth", req.url));
   }
-
-  return NextResponse.next();
 }
+
+// Only run middleware on specific routes (dashboard routes)
+export const config = {
+  matcher: [
+    "/dashboard/:path*",
+    // You can add other protected routes here
+  ],
+};
