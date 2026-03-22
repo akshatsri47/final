@@ -33,7 +33,7 @@ export default function AboutUsClient() {
   return (
     <div className="bg-white">
       {/* Hero Section */}
-    
+
       {/* Mission Statement */}
       <div className="py-16 px-4 max-w-7xl mx-auto">
         <div className="animate-on-scroll opacity-0 translate-y-10 transition-all duration-700 ease-out">
@@ -42,7 +42,7 @@ export default function AboutUsClient() {
           </div>
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 text-gray-800">Our Mission</h2>
           <p className="text-xl text-center max-w-4xl mx-auto text-gray-600">
-           For years, we have been serving our region with high-quality products and exceptional customer satisfaction and with proper scientific information. Now, we are bringing that same commitment and trust to the digital world. Welcome to [Krishi Doctor]—your go-to online destination for [Agri products/services.
+            For years, we have been serving our region with high-quality products and exceptional customer satisfaction and with proper scientific information. Now, we are bringing that same commitment and trust to the digital world. Welcome to [Krishi Doctor]—your go-to online destination for [Agri products/services.
           </p>
         </div>
       </div>
@@ -54,21 +54,21 @@ export default function AboutUsClient() {
             <div className="animate-on-scroll opacity-0 translate-y-10 transition-all duration-700 ease-out">
               <h2 className="text-3xl font-bold mb-6 text-gray-800">Our Journey</h2>
               <p className="text-lg text-gray-600 mb-4">
-              Our journey began 50 Years ago when generally more reliant on traditional methods of farming were being used, many farmers used to face heavy losses, only cash crops were in use even normal fertilizers seem like some magic for the farmers. So, those were the days when this organization was established and from those days till now we just have one vision to give our farmers the best. Over the years, we have built a reputation for quality, reliability, and customer trust, And now scaling ourself to many more farmers.
+                Our journey began 50 Years ago when generally more reliant on traditional methods of farming were being used, many farmers used to face heavy losses, only cash crops were in use even normal fertilizers seem like some magic for the farmers. So, those were the days when this organization was established and from those days till now we just have one vision to give our farmers the best. Over the years, we have built a reputation for quality, reliability, and customer trust, And now scaling ourself to many more farmers.
               </p>
               <p className="text-lg text-gray-600 mb-4">
-               As the world evolved, we realized the need to make shopping easier at the same time educating farmers with correct information regarding seed, chemicals and innovative methods . That&apos;s why we decided to transform our traditional store into an eCommerce platform, so you can enjoy the same great products and service from the comfort of your home.
+                As the world evolved, we realized the need to make shopping easier at the same time educating farmers with correct information regarding seed, chemicals and innovative methods . That&apos;s why we decided to transform our traditional store into an eCommerce platform, so you can enjoy the same great products and service from the comfort of your home.
               </p>
               <p className="text-lg text-gray-600">
                 Our commitment to research and development ensures we stay at the cutting edge of agricultural science, continuously improving our formulations to meet the evolving needs of modern farming.
               </p>
             </div>
             <div className="relative h-80 md:h-96 rounded-lg overflow-hidden animate-on-scroll opacity-0 translate-y-10 transition-all duration-700 delay-300 ease-out">
-              <Image 
-                src="/profile/downloads1.jpg" 
-                alt="Company history timeline" 
-                layout="fill" 
-                
+              <Image
+                src="/warehouseimage.jpg"
+                alt="Company history timeline"
+                layout="fill"
+
                 className="rounded-lg object-contain"
               />
             </div>
@@ -145,8 +145,8 @@ export default function AboutUsClient() {
                 description: "We strive to make premium fertilizers accessible to farms of all sizes and types."
               }
             ].map((value, index) => (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 animate-on-scroll opacity-0 translate-y-10 transition-all duration-700 ease-out"
                 style={{ transitionDelay: `${100 * index}ms` }}
               >
@@ -170,7 +170,7 @@ export default function AboutUsClient() {
           Meet the experts leading our mission to revolutionize sustainable agriculture
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-       
+
           {[
             {
               name: "Mr.Santosh Kumar Gupta",
@@ -184,7 +184,7 @@ export default function AboutUsClient() {
               bio: "[Mr. Pankaj Gupta fully joined our organization in 1995 after completing his diploma in agriculture from Manage Hyderabad he has been serving the farmers for 32 years now and coming, he has been walking passionately in the leadership of his father Mr. Santosh Kumar Gupta, he has also awarded by many national fertilizer companies and also maestro for the management of warehouses which comes under Gupta Trading Company for truly devoted for farmers.",
               image: "/profile/char5.jpg"
             },
-               {
+            {
               name: "Sumit Gupta",
               role: "Founder",
               bio: "Mr. Sumit Gupta joined our organization in 1997 after completing his diploma in agriculture from Manage Hyderabad, he has been serving the farmers for 30 years now and coming, he has been walking passionately in the leadership of his father Mr. Santosh Kumar Gupta, he has also awarded by many national fertilizer companies and many national and international chemical companies for truly devoted for farmers.",
@@ -202,18 +202,18 @@ export default function AboutUsClient() {
               bio: "Mr. Samarth Gupta joined Gupta Trading company officially at 2024.After completing his diploma in Agriculture from Manage Hyderabad and Bachelor's in Business Administration from Amity University Rajasthan and now currently a student of ABM at Symbiosis University his fascinating career in business studies giving wings to our organization and exploring technology to reach out to farmers nationally and also by furnishing Farmers with our 51 year of agricultural experience with will definitely now help farmers Nationally to showcase their true colors.",
               image: "/profile/char4.jpg"
             },
-         
-          
+
+
           ].map((member, index) => (
-            <div 
-              key={index} 
+            <div
+              key={index}
               className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 animate-on-scroll opacity-0 translate-y-10 transition-all duration-700 ease-out"
               style={{ transitionDelay: `${100 * index}ms` }}
             >
               <div className="h-64 relative">
-                <Image 
-                  src={member.image} 
-                  alt={member.name} 
+                <Image
+                  src={member.image}
+                  alt={member.name}
                   layout="fill"
                   className='object-contain'
                 />

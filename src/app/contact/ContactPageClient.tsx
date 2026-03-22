@@ -17,7 +17,7 @@ const ContactPageClient: NextPage = () => {
     email?: string;
     message?: string;
   }>({});
-  
+
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
@@ -28,7 +28,7 @@ const ContactPageClient: NextPage = () => {
       ...prev,
       [name]: value
     }));
-    
+
     // Clear errors when user types
     if (errors[name as keyof typeof errors]) {
       setErrors(prev => ({
@@ -44,35 +44,35 @@ const ContactPageClient: NextPage = () => {
       email?: string;
       message?: string;
     } = {};
-    
+
     if (!formData.name.trim()) {
       newErrors.name = 'Name is required';
     }
-    
+
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
-    
+
     if (!formData.message.trim()) {
       newErrors.message = 'Message is required';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
+
     if (validateForm()) {
       setLoading(true);
-      
+
       try {
         // Simulate API call for demonstration
         await new Promise(resolve => setTimeout(resolve, 1500));
-        
+
         // Reset form after successful submission
         setFormData({
           name: '',
@@ -81,7 +81,7 @@ const ContactPageClient: NextPage = () => {
           subject: '',
           message: ''
         });
-        
+
         setSubmitted(true);
         // Hide success message after 5 seconds
         setTimeout(() => setSubmitted(false), 5000);
@@ -119,8 +119,8 @@ const ContactPageClient: NextPage = () => {
 
   const successVariants = {
     hidden: { scale: 0.8, opacity: 0 },
-    visible: { 
-      scale: 1, 
+    visible: {
+      scale: 1,
       opacity: 1,
       transition: {
         type: 'spring',
@@ -132,7 +132,7 @@ const ContactPageClient: NextPage = () => {
   return (
     <main className="min-h-screen bg-gradient-to-b from-green-50 to-white py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -143,9 +143,9 @@ const ContactPageClient: NextPage = () => {
             Have questions about sustainable farming practices? Need information about our agricultural products? Our team is ready to help!
           </p>
         </motion.div>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
-          <motion.div 
+          <motion.div
             initial="hidden"
             animate="visible"
             variants={containerVariants}
@@ -159,18 +159,18 @@ const ContactPageClient: NextPage = () => {
                 className="flex flex-col items-center justify-center text-center p-12 bg-gradient-to-br from-green-50 to-green-100"
               >
                 <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6">
-                  <svg 
-                    className="w-12 h-12 text-green-600" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24" 
+                  <svg
+                    className="w-12 h-12 text-green-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                     xmlns="http://www.w3.org/2000/svg"
                   >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M5 13l4 4L19 7" 
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
                     />
                   </svg>
                 </div>
@@ -181,12 +181,12 @@ const ContactPageClient: NextPage = () => {
               </motion.div>
             ) : (
               <form onSubmit={handleSubmit} className="p-8">
-                <motion.div 
-                  variants={itemVariants} 
+                <motion.div
+                  variants={itemVariants}
                   className="mb-6"
                 >
-                  <label 
-                    htmlFor="name" 
+                  <label
+                    htmlFor="name"
                     className={`block mb-2 font-medium ${focusedField === 'name' ? 'text-green-700' : 'text-gray-700'} transition-colors duration-200`}
                   >
                     Name <span className="text-red-500">*</span>
@@ -212,7 +212,7 @@ const ContactPageClient: NextPage = () => {
                     )}
                   </div>
                   {errors.name && (
-                    <motion.p 
+                    <motion.p
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="mt-2 text-sm text-red-600"
@@ -221,13 +221,13 @@ const ContactPageClient: NextPage = () => {
                     </motion.p>
                   )}
                 </motion.div>
-                
-                <motion.div 
-                  variants={itemVariants} 
+
+                <motion.div
+                  variants={itemVariants}
                   className="mb-6"
                 >
-                  <label 
-                    htmlFor="email" 
+                  <label
+                    htmlFor="email"
                     className={`block mb-2 font-medium ${focusedField === 'email' ? 'text-green-700' : 'text-gray-700'} transition-colors duration-200`}
                   >
                     Email <span className="text-red-500">*</span>
@@ -253,7 +253,7 @@ const ContactPageClient: NextPage = () => {
                     )}
                   </div>
                   {errors.email && (
-                    <motion.p 
+                    <motion.p
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="mt-2 text-sm text-red-600"
@@ -262,13 +262,13 @@ const ContactPageClient: NextPage = () => {
                     </motion.p>
                   )}
                 </motion.div>
-                
-                <motion.div 
-                  variants={itemVariants} 
+
+                <motion.div
+                  variants={itemVariants}
                   className="mb-6"
                 >
-                  <label 
-                    htmlFor="phone" 
+                  <label
+                    htmlFor="phone"
                     className={`block mb-2 font-medium ${focusedField === 'phone' ? 'text-green-700' : 'text-gray-700'} transition-colors duration-200`}
                   >
                     Phone Number
@@ -294,13 +294,13 @@ const ContactPageClient: NextPage = () => {
                     )}
                   </div>
                 </motion.div>
-                
-                <motion.div 
-                  variants={itemVariants} 
+
+                <motion.div
+                  variants={itemVariants}
                   className="mb-6"
                 >
-                  <label 
-                    htmlFor="subject" 
+                  <label
+                    htmlFor="subject"
                     className={`block mb-2 font-medium ${focusedField === 'subject' ? 'text-green-700' : 'text-gray-700'} transition-colors duration-200`}
                   >
                     Subject
@@ -341,13 +341,13 @@ const ContactPageClient: NextPage = () => {
                     )}
                   </div>
                 </motion.div>
-                
-                <motion.div 
-                  variants={itemVariants} 
+
+                <motion.div
+                  variants={itemVariants}
                   className="mb-6"
                 >
-                  <label 
-                    htmlFor="message" 
+                  <label
+                    htmlFor="message"
                     className={`block mb-2 font-medium ${focusedField === 'message' ? 'text-green-700' : 'text-gray-700'} transition-colors duration-200`}
                   >
                     Message <span className="text-red-500">*</span>
@@ -373,7 +373,7 @@ const ContactPageClient: NextPage = () => {
                     )}
                   </div>
                   {errors.message && (
-                    <motion.p 
+                    <motion.p
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="mt-2 text-sm text-red-600"
@@ -382,7 +382,7 @@ const ContactPageClient: NextPage = () => {
                     </motion.p>
                   )}
                 </motion.div>
-                
+
                 <motion.div variants={itemVariants}>
                   <motion.button
                     type="submit"
@@ -407,7 +407,7 @@ const ContactPageClient: NextPage = () => {
               </form>
             )}
           </motion.div>
-          
+
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
@@ -418,7 +418,7 @@ const ContactPageClient: NextPage = () => {
               <h3 className="text-xl font-bold mb-2">Get In Touch</h3>
               <p className="text-green-100">We are here to answer your questions</p>
             </div>
-            
+
             <div className="p-6">
               <div className="flex items-start mb-6">
                 <div className="flex-shrink-0 bg-green-100 rounded-full p-2 mr-4">
@@ -432,7 +432,7 @@ const ContactPageClient: NextPage = () => {
                   <p className="text-gray-600">358 , Ghantaghar Marg, ghanthagahr <br />Katni,Madhya Pradesh, 483501</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start mb-6">
                 <div className="flex-shrink-0 bg-green-100 rounded-full p-2 mr-4">
                   <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -444,7 +444,7 @@ const ContactPageClient: NextPage = () => {
                   <p className="text-gray-600">(+91) 9109109866</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start mb-6">
                 <div className="flex-shrink-0 bg-green-100 rounded-full p-2 mr-4">
                   <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -453,10 +453,10 @@ const ContactPageClient: NextPage = () => {
                 </div>
                 <div>
                   <h4 className="text-gray-700 font-medium mb-1">Email</h4>
-                  <p className="text-gray-600">guptatradingcompny910@gmail.com</p>
+                  <p className="text-gray-600">guptatradingcompany910@gmail.com</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start mb-8">
                 <div className="flex-shrink-0 bg-green-100 rounded-full p-2 mr-4">
                   <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -468,12 +468,12 @@ const ContactPageClient: NextPage = () => {
                   <p className="text-gray-600">Monday - Saturday: 11:00 AM - 8:00 PM Sunday: Closed</p>
                 </div>
               </div>
-              
+
               <div className="border-t border-gray-200 pt-6">
                 <h4 className="text-gray-700 font-medium mb-4">Follow Us</h4>
                 <div className="flex space-x-4">
-                  <motion.a 
-                    href="#" 
+                  <motion.a
+                    href="#"
                     whileHover={{ y: -3 }}
                     className="bg-green-100 text-green-600 rounded-full p-2 hover:bg-green-200 transition-colors duration-300"
                   >
@@ -481,8 +481,8 @@ const ContactPageClient: NextPage = () => {
                       <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z" />
                     </svg>
                   </motion.a>
-                  <motion.a 
-                    href="#" 
+                  <motion.a
+                    href="#"
                     whileHover={{ y: -3 }}
                     className="bg-green-100 text-green-600 rounded-full p-2 hover:bg-green-200 transition-colors duration-300"
                   >
@@ -490,8 +490,8 @@ const ContactPageClient: NextPage = () => {
                       <path d="M22.162 5.656a8.384 8.384 0 01-2.402.658A4.196 4.196 0 0021.6 4c-.82.488-1.719.83-2.656 1.015a4.182 4.182 0 00-7.126 3.814 11.874 11.874 0 01-8.62-4.37 4.168 4.168 0 00-.566 2.103c0 1.45.738 2.731 1.86 3.481a4.168 4.168 0 01-1.894-.523v.052a4.185 4.185 0 003.355 4.101 4.21 4.21 0 01-1.89.072A4.185 4.185 0 007.97 16.65a8.394 8.394 0 01-6.191 1.732 11.83 11.83 0 006.41 1.88c7.693 0 11.9-6.373 11.9-11.9 0-.18-.005-.362-.013-.54a8.496 8.496 0 002.087-2.165z" />
                     </svg>
                   </motion.a>
-                  <motion.a 
-                    href="#" 
+                  <motion.a
+                    href="#"
                     whileHover={{ y: -3 }}
                     className="bg-green-100 text-green-600 rounded-full p-2 hover:bg-green-200 transition-colors duration-300"
                   >
@@ -499,8 +499,8 @@ const ContactPageClient: NextPage = () => {
                       <path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0 18c4.411 0 8-3.589 8-8s-3.589-8-8-8-8 3.589-8 8 3.589 8 8 8zm2-10.5a.5.5 0 01-.5.5h-1v1h1a.5.5 0 01.5.5v1a.5.5 0 01-.5.5h-1v1a.5.5 0 01-.5.5h-1a.5.5 0 01-.5-.5v-1h-1a.5.5 0 01-.5-.5v-1a.5.5 0 01.5-.5h1v-1h-1a.5.5 0 01-.5-.5v-1a.5.5 0 01.5-.5h1v-.5a.5.5 0 01.5-.5h1a.5.5 0 01.5.5v.5h1a.5.5 0 01.5.5v1z" />
                     </svg>
                   </motion.a>
-                  <motion.a 
-                    href="#" 
+                  <motion.a
+                    href="#"
                     whileHover={{ y: -3 }}
                     className="bg-green-100 text-green-600 rounded-full p-2 hover:bg-green-200 transition-colors duration-300"
                   >
