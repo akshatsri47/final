@@ -65,7 +65,7 @@ export default function AboutUsClient() {
             </div>
             <div className="relative h-80 md:h-96 rounded-lg overflow-hidden animate-on-scroll opacity-0 translate-y-10 transition-all duration-700 delay-300 ease-out">
               <Image
-                src="/warehouseimage.jpg"
+                src="/logo.jpg"
                 alt="Company history timeline"
                 layout="fill"
 
