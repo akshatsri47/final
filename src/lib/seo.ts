@@ -247,3 +247,41 @@ export function generateLocalBusinessStructuredData(): JsonLd {
     priceRange: "10000₹₹",
   };
 }
+
+export interface ArticleInput {
+  title: string;
+  description: string;
+  image: string;
+  url: string;
+  datePublished: string;
+  dateModified?: string;
+  authorName: string;
+}
+
+export function generateArticleStructuredData(article: ArticleInput): JsonLd {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: article.title,
+    description: article.description,
+    image: [article.image],
+    datePublished: article.datePublished,
+    dateModified: article.dateModified || article.datePublished,
+    author: {
+      "@type": "Person",
+      name: article.authorName,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "KrishDoctor",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://www.krishdoctor.in/logo.png"
+      }
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": article.url
+    }
+  };
+}

@@ -182,7 +182,7 @@ export default function BlogDetailClient({ blogId }: BlogDetailClientProps) {
 
             {/* Content */}
             <div 
-              className="prose prose-lg max-w-none prose-emerald prose-headings:text-gray-900 prose-a:text-emerald-600 hover:prose-a:text-emerald-700"
+              className="prose prose-lg max-w-none prose-emerald prose-headings:text-gray-900 prose-a:text-emerald-600 hover:prose-a:text-emerald-700 prose-img:rounded-xl prose-img:w-full prose-img:max-h-[600px] prose-img:object-contain prose-img:mx-auto"
               dangerouslySetInnerHTML={{ __html: blog.content }}
             />
 

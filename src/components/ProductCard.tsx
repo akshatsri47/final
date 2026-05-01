@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Product } from "../../types/types";
 import api from "../app/utils/api";
 import { useCoupon } from "@/app/context/CouponContext";
+import { calculatePricing } from "../app/utils/discount";
 
 export interface PricingOption {
   packageSize: string;
@@ -47,18 +48,23 @@ export default function ProductCard({ product }: { product: ExamProduct }) {
   const { originalPrice, discountedPrice, appliedDiscount } = useMemo(() => {
     if (!selectedPrice) return { originalPrice: 'N/A', discountedPrice: 'N/A', appliedDiscount: 0 };
 
-    const discountedPrice = Number(selectedPrice.price);
-    if (isNaN(discountedPrice)) {
+    const basePrice = Number(selectedPrice.price);
+    if (isNaN(basePrice)) {
       console.error('Invalid price value:', selectedPrice.price);
       return { originalPrice: 'N/A', discountedPrice: 'N/A', appliedDiscount: 0 };
     }
 
-    const discountFromCoupon = coupon?.discount ?? 0;
-    const discountFromProduct = product.discount ?? 0;
-    const appliedDiscount = Math.max(discountFromCoupon, discountFromProduct);
-    const originalPrice = (discountedPrice + (discountedPrice * appliedDiscount) / 100).toFixed(2);
+    const { originalPrice: origPrice, sellingPrice, displayDiscount } = calculatePricing(
+      basePrice,
+      product.discount || 0,
+      coupon?.discount || 0
+    );
 
-    return { originalPrice, discountedPrice: discountedPrice.toFixed(2), appliedDiscount };
+    return { 
+      originalPrice: origPrice.toFixed(2), 
+      discountedPrice: sellingPrice.toFixed(2), 
+      appliedDiscount: displayDiscount 
+    };
   }, [selectedPrice, coupon, product.discount]);
 
   // Add item to cart

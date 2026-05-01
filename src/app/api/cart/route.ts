@@ -33,10 +33,21 @@ export async function PUT(req: NextRequest) {
     const productData = productSnap.data();
     const selectedPackage = productData.pricing?.find((p: { packageSize: string }) => p.packageSize === packageSize);
 
+    // Calculate actual selling price from base price and product discount
+    const basePrice = selectedPackage?.price ?? 0;
+    const prodDiscount = productData.discount || 0;
+    
+    let sellingPrice = basePrice;
+    if (prodDiscount < 0) {
+      sellingPrice = basePrice - (basePrice * Math.abs(prodDiscount)) / 100;
+    } else if (prodDiscount > 0) {
+      sellingPrice = basePrice + (basePrice * prodDiscount) / 100;
+    }
+
     const updatedCartItem: CartItem = {
       productId,
       quantity: Number(quantity),
-      price: selectedPackage?.price ?? 0,
+      price: sellingPrice,
       name: productData.name ?? "Unnamed Product",
       images: productData.images?.[0] ?? "/placeholder.png", // Changed from "image" to "images"
       packageSize: selectedPackage?.packageSize ?? "Default Size",

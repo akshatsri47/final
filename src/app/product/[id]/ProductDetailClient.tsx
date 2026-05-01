@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { Product } from "../../../../types/types";
 import Image from "next/image";
 import api from "../../utils/api";
+import { calculatePricing } from "../../utils/discount";
 
 interface ProductDetailClientProps {
   product: Product;
@@ -249,8 +250,12 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 .slice(0, 4) // Take first 4 after shuffle
                 .map((deal) => {
                   const dealImage = deal.images?.[0] || "/placeholder.jpg";
-                  const dealPrice = deal.pricing?.[0]?.price || 0;
-                  const appliedDiscount = deal.discount || 0;
+                  const basePrice = Number(deal.pricing?.[0]?.price || 0);
+                  const { sellingPrice, displayDiscount: appliedDiscount } = calculatePricing(
+                    basePrice,
+                    deal.discount || 0,
+                    0
+                  );
 
                   return (
                     <a
@@ -267,7 +272,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 />
                       <p>{deal.name}</p>
                       <p className="font-semibold text-green-600">
-                        ₹{dealPrice}
+                        ₹{sellingPrice.toFixed(2)}
                       </p>
                       {appliedDiscount > 0 && (
                         <p className="text-sm text-red-500">{appliedDiscount}% OFF</p>

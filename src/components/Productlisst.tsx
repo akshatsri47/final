@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Product, Pricing } from '../../types/types';
 import Image from "next/image"; 
+import { calculatePricing } from '../app/utils/discount';
 interface ProductListProps {
   products: Product[];
   onBack: () => void;
@@ -54,11 +55,12 @@ const ProductList: React.FC<ProductListProps> = ({ products, onBack, isLoading }
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {products.map((product) => {
           const selectedPricing = getSelectedPricing(product);
-          const appliedDiscount = product.discount || 0;
-          const sellingPrice = Number(selectedPricing.price);
-          const originalPrice = appliedDiscount > 0 
-            ? sellingPrice + (sellingPrice * appliedDiscount / 100)
-            : sellingPrice;
+          const basePrice = Number(selectedPricing.price);
+          const { originalPrice, sellingPrice, displayDiscount: appliedDiscount } = calculatePricing(
+            basePrice,
+            product.discount || 0,
+            0
+          );
             
           return (
             <div 

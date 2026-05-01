@@ -1,6 +1,8 @@
 import { Metadata } from 'next';
 import { getBlogById } from '../../../lib/blogFirestore';
 import BlogDetailClient from './BlogDetailClient';
+import StructuredDataComponent from '../../../components/StructuredData';
+import { generateArticleStructuredData } from '../../../lib/seo';
 
 type Props = {
   params: Promise<{ id: string }>
@@ -71,5 +73,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BlogDetailPage({ params }: Props) {
   const { id: blogId } = await params;
-  return <BlogDetailClient blogId={blogId} />;
+  
+  const blog = await getBlogById(blogId);
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.krishdoctor.in';
+  
+  if (!blog) {
+    return <BlogDetailClient blogId={blogId} />;
+  }
+
+  const articleData = generateArticleStructuredData({
+    title: blog.seo?.metaTitle || blog.title,
+    description: blog.seo?.metaDescription || blog.excerpt || blog.title,
+    image: blog.featuredImage?.url || `${baseUrl}/banner1.jpg`,
+    url: `${baseUrl}/blogs/${blogId}`,
+    datePublished: blog.publishDate ? new Date(blog.publishDate.seconds * 1000).toISOString() : new Date().toISOString(),
+    dateModified: blog.updatedAt ? new Date(blog.updatedAt.seconds * 1000).toISOString() : undefined,
+    authorName: blog.author?.name || 'KrishDoctor Expert',
+  });
+
+  return (
+    <>
+      <StructuredDataComponent data={articleData} />
+      <BlogDetailClient blogId={blogId} />
+    </>
+  );
 }

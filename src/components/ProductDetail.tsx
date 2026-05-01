@@ -5,6 +5,7 @@ import { Product } from "../../types/types";
 import api from "../app/utils/api"; 
 import { useState, useEffect } from "react";
 import { useCoupon } from "../app/context/CouponContext";
+import { calculatePricing } from "../app/utils/discount";
 
 interface PricingOption {
   packageSize: string;
@@ -22,7 +23,13 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
   const userId = useUserId();
   const router = useRouter();
   const { coupon } = useCoupon();
-  const appliedDiscount = Math.max(coupon?.discount || 0, product.discount || 0);
+  
+  const basePrice = selectedPrice ? Number(selectedPrice.price) : 0;
+  const { originalPrice, sellingPrice, displayDiscount: appliedDiscount } = calculatePricing(
+    basePrice,
+    product.discount || 0,
+    coupon?.discount || 0
+  );
 
   // Set the first package size and price as default on component mount
   useEffect(() => {
@@ -41,7 +48,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
         productId: product.id,
         quantity,
         packageSize: selectedPrice.packageSize,
-        price: selectedPrice.price,
+        price: sellingPrice,
       });
       alert(`✅ ${quantity} item(s) added to cart!`);
     } catch (err) {
@@ -88,10 +95,10 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
         {selectedPrice && (
           <div className="mb-2">
             {appliedDiscount > 0 && (
-              <span className="text-gray-500 line-through text-lg">₹{(Number(selectedPrice.price) + (Number(selectedPrice.price) * appliedDiscount) / 100).toFixed(2)}</span>
+              <span className="text-gray-500 line-through text-lg">₹{originalPrice.toFixed(2)}</span>
             )}
             <div className="flex items-center gap-3">
-              <p className="text-3xl font-bold">₹{Number(selectedPrice.price).toFixed(2)}</p>
+              <p className="text-3xl font-bold">₹{sellingPrice.toFixed(2)}</p>
               {appliedDiscount > 0 && (
                 <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">{appliedDiscount}% OFF</span>
               )}
