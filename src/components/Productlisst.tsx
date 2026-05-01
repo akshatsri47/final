@@ -55,7 +55,7 @@ const ProductList: React.FC<ProductListProps> = ({ products, onBack, isLoading }
         {products.map((product) => {
           const selectedPricing = getSelectedPricing(product);
           const appliedDiscount = product.discount || 0;
-          const sellingPrice = selectedPricing.price;
+          const sellingPrice = Number(selectedPricing.price);
           const originalPrice = appliedDiscount > 0 
             ? sellingPrice + (sellingPrice * appliedDiscount / 100)
             : sellingPrice;
