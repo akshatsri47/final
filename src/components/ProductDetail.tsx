@@ -4,6 +4,7 @@ import { useUserId } from "../app/hooks/useId";
 import { Product } from "../../types/types";
 import api from "../app/utils/api"; 
 import { useState, useEffect } from "react";
+import { useCoupon } from "../app/context/CouponContext";
 
 interface PricingOption {
   packageSize: string;
@@ -20,6 +21,8 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
   const [selectedPrice, setSelectedPrice] = useState<PricingOption | null>(null);
   const userId = useUserId();
   const router = useRouter();
+  const { coupon } = useCoupon();
+  const appliedDiscount = Math.max(coupon?.discount || 0, product.discount || 0);
 
   // Set the first package size and price as default on component mount
   useEffect(() => {
@@ -83,7 +86,17 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
           ))}
         </select>
         {selectedPrice && (
-          <p className="text-2xl font-bold">₹{selectedPrice.price}</p>
+          <div className="mb-2">
+            {appliedDiscount > 0 && (
+              <span className="text-gray-500 line-through text-lg">₹{(selectedPrice.price + (selectedPrice.price * appliedDiscount) / 100).toFixed(2)}</span>
+            )}
+            <div className="flex items-center gap-3">
+              <p className="text-3xl font-bold">₹{selectedPrice.price.toFixed(2)}</p>
+              {appliedDiscount > 0 && (
+                <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">{appliedDiscount}% OFF</span>
+              )}
+            </div>
+          </div>
         )}
 
         <p className="text-gray-600">Inclusive of all taxes</p>

@@ -250,7 +250,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 .map((deal) => {
                   const dealImage = deal.images?.[0] || "/placeholder.jpg";
                   const dealPrice = deal.pricing?.[0]?.price || 0;
-                  const discountAmount = deal.discount || 20; // Example discount
+                  const appliedDiscount = deal.discount || 0;
 
                   return (
                     <a
@@ -269,7 +269,9 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                       <p className="font-semibold text-green-600">
                         ₹{dealPrice}
                       </p>
-                      <p>Save: ₹{discountAmount}</p>
+                      {appliedDiscount > 0 && (
+                        <p className="text-sm text-red-500">{appliedDiscount}% OFF</p>
+                      )}
                     </a>
                   );
                 })}

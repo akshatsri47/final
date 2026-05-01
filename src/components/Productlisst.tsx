@@ -54,9 +54,11 @@ const ProductList: React.FC<ProductListProps> = ({ products, onBack, isLoading }
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {products.map((product) => {
           const selectedPricing = getSelectedPricing(product);
-          const discountedPrice = product.discount 
-            ? selectedPricing.price - (selectedPricing.price * (product.discount / 100))
-            : selectedPricing.price;
+          const appliedDiscount = product.discount || 0;
+          const sellingPrice = selectedPricing.price;
+          const originalPrice = appliedDiscount > 0 
+            ? sellingPrice + (sellingPrice * appliedDiscount / 100)
+            : sellingPrice;
             
           return (
             <div 
@@ -124,13 +126,13 @@ const ProductList: React.FC<ProductListProps> = ({ products, onBack, isLoading }
 
                 <div className="flex justify-between items-center">
                   <div>
-                    {product.discount ? (
+                    {appliedDiscount > 0 ? (
                       <div>
-                        <span className="text-gray-500 line-through text-sm">₹{selectedPricing.price.toFixed(2)}</span>
-                        <span className="text-green-600 font-bold ml-2">₹{discountedPrice.toFixed(2)}</span>
+                        <span className="text-gray-500 line-through text-sm">₹{originalPrice.toFixed(2)}</span>
+                        <span className="text-green-600 font-bold ml-2">₹{sellingPrice.toFixed(2)}</span>
                       </div>
                     ) : (
-                      <span className="text-green-600 font-bold">₹{selectedPricing.price.toFixed(2)}</span>
+                      <span className="text-green-600 font-bold">₹{sellingPrice.toFixed(2)}</span>
                     )}
                   </div>
                   <button className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
