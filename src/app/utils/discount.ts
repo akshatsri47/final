@@ -16,8 +16,8 @@ export function calculatePricing(
     originalPrice = basePrice; // Original price stays at base price
   } else if (prodDiscount > 0) {
     displayDiscount = prodDiscount;
-    sellingPrice = basePrice + (basePrice * displayDiscount) / 100;
-    originalPrice = sellingPrice + (sellingPrice * displayDiscount) / 100; // Inflate to show markup as a discount
+    sellingPrice = basePrice;
+    originalPrice = basePrice + (basePrice * displayDiscount) / 100; // Inflate to show markup as a discount
   } else {
     if (coupDiscount > 0) {
       displayDiscount = coupDiscount;

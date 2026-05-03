@@ -41,7 +41,7 @@ export async function PUT(req: NextRequest) {
     if (prodDiscount < 0) {
       sellingPrice = basePrice - (basePrice * Math.abs(prodDiscount)) / 100;
     } else if (prodDiscount > 0) {
-      sellingPrice = basePrice + (basePrice * prodDiscount) / 100;
+      sellingPrice = basePrice;
     }
 
     const updatedCartItem: CartItem = {
