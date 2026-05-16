@@ -98,9 +98,10 @@ export default function SearchBar() {
             <div className="p-4 text-gray-500 text-center">Searching...</div>
           ) : searchResults.length > 0 ? (
             searchResults.map((product) => (
-              <button 
-                key={product.id} 
-                onClick={() => handleProductSelect(product.id)} 
+              <button
+                key={product.id}
+                type="button"
+                onClick={() => handleProductSelect(product.id)}
                 className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-900 border-b border-gray-100 last:border-0"
               >
                 <span className="font-medium">{product.name}</span>
