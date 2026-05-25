@@ -23,21 +23,33 @@ export default function LoginButton() {
       const token = await getIdToken(user);
 
       // ✅ Store auth token and user ID securely
-      Cookies.set("authToken", token, { expires: 7, secure: true, sameSite: "Strict" });
-      Cookies.set("userId", user.uid, { expires: 7, secure: true, sameSite: "Strict" });
+      Cookies.set("authToken", token, {
+        expires: 7,
+        secure: true,
+        sameSite: "Strict",
+      });
+      Cookies.set("userId", user.uid, {
+        expires: 7,
+        secure: true,
+        sameSite: "Strict",
+      });
       localStorage.setItem("userId", user.uid);
 
       console.log("✔ User ID stored in localStorage:", user.uid);
 
       // ✅ Save user details in Firestore
-      await setDoc(doc(db, "users", user.uid), {
-        uid: user.uid,
-        name: user.displayName,
-        email: user.email,
-        photoURL: user.photoURL,
-        createdAt: new Date().toISOString(),
-        cart: [],
-      }, { merge: true });
+      await setDoc(
+        doc(db, "users", user.uid),
+        {
+          uid: user.uid,
+          name: user.displayName,
+          email: user.email,
+          photoURL: user.photoURL,
+          createdAt: new Date().toISOString(),
+          cart: [],
+        },
+        { merge: true },
+      );
 
       console.log("User saved to Firestore:", user);
 
@@ -45,7 +57,7 @@ export default function LoginButton() {
       router.push(`/`);
     } catch (error) {
       console.error("❌ Login Error:", error);
-      setError("Login failed. Please try again.");
+      setError("login failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -86,10 +98,10 @@ export default function LoginButton() {
                 d="M4 12a8 8 0 018-8v8H4z"
               ></path>
             </svg>
-            Logging in...
+            logging in...
           </>
         ) : (
-          <>Login with Google</>
+          <>login with Google</>
         )}
       </button>
     </div>
