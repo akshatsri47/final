@@ -6,6 +6,7 @@ import { getFirestore, doc, setDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 
 const db = getFirestore();
+const PHONE_PREFIX = "+91";
 
 declare global {
   interface Window {
@@ -21,7 +22,7 @@ interface FirebaseErrorType {
 
 export default function PhoneAuth() {
   const router = useRouter();
-  const [phone, setPhone] = useState("+91");
+  const [phone, setPhone] = useState(PHONE_PREFIX);
   const [otp, setOtp] = useState("");
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -65,15 +66,8 @@ export default function PhoneAuth() {
   // Format phone number as user types
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "");
-    if (value.length > 0) {
-      if (!value.startsWith("+")) {
-        setPhone("+" + value);
-      } else {
-        setPhone(value);
-      }
-    } else {
-      setPhone("");
-    }
+    const phoneNumber = value.startsWith("91") ? value.slice(2) : value;
+    setPhone(`${PHONE_PREFIX}${phoneNumber}`);
   };
 
   const setupRecaptcha = () => {
@@ -209,7 +203,7 @@ export default function PhoneAuth() {
               <input
                 id="phone"
                 type="tel"
-                placeholder="+1 234 567 8900"
+                placeholder="+91 98765 43210"
                 value={phone}
                 onChange={handlePhoneChange}
                 className="w-full p-4 pl-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
@@ -226,9 +220,9 @@ export default function PhoneAuth() {
           </div>
           <button
             onClick={sendOtp}
-            disabled={loading || !phone}
+            disabled={loading || phone.length <= PHONE_PREFIX.length}
             className={`w-full p-4 rounded-lg text-white font-medium transition ${
-              loading || !phone
+              loading || phone.length <= PHONE_PREFIX.length
                 ? "bg-blue-300 cursor-not-allowed"
                 : "bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg"
             }`}
