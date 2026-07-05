@@ -21,7 +21,7 @@ interface FirebaseErrorType {
 
 export default function PhoneAuth() {
   const router = useRouter();
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState("+91");
   const [otp, setOtp] = useState("");
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [loading, setLoading] = useState(false);
