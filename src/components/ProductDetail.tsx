@@ -108,6 +108,12 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
 
         <p className="text-gray-600">Inclusive of all taxes</p>
 
+        {product.codAvailable === false && (
+          <p className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-orange-700 bg-orange-50 border border-orange-200 rounded px-2 py-1">
+            💳 Online payment only — COD not available for this product
+          </p>
+        )}
+
         <div className="mt-4">
           <p className="font-semibold">Quantity:</p>
           <div className="flex gap-3 mt-2">

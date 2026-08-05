@@ -12,6 +12,7 @@ function OrderConfirmationContent() {
     const searchParams = useSearchParams();
     const orderId = searchParams.get("orderId");
     const paymentMethod = searchParams.get("paymentMethod"); // Get payment method from URL
+    const totalParam = searchParams.get("total"); // COD total (incl. fee) passed from the order page
 
     const [success, setSuccess] = useState(false);
     const [shipRocketId, setShipRocketId] = useState("");
@@ -120,6 +121,7 @@ function OrderConfirmationContent() {
                                 </p>
                                 <p className="text-sm text-gray-600 mb-6">
                                     Payment will be collected upon delivery.
+                                    {totalParam ? ` Please keep ₹${totalParam} ready (includes 15% COD fee).` : ""}
                                 </p>
                             </>
                         ) : (

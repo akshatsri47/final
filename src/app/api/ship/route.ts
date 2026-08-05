@@ -118,7 +118,24 @@ export async function POST(request: Request) {
 
         // Determine the correct payment method string for Shiprocket
         const shiprocketPaymentMethod = paymentMethod === "COD" ? "COD" : "Prepaid";
-        
+
+        // ✅ COD surcharge: 15% of the cart subtotal, added as its own line item so
+        //    Shiprocket's sub_total stays consistent with the item list
+        const cartSubtotal = Math.round(cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0));
+        const COD_FEE_PERCENT = 15;
+        const codFee = shiprocketPaymentMethod === "COD" ? Math.round((cartSubtotal * COD_FEE_PERCENT) / 100) : 0;
+        if (codFee > 0) {
+            orderItems.push({
+                name: "COD Fee (Cash on Delivery)",
+                sku: "COD_FEE",
+                units: 1,
+                selling_price: codFee,
+                discount: 0,
+                tax: 0,
+                hsn: 44122,
+            });
+        }
+
         const orderData = {
             order_id: orderId,
             order_date: new Date().toISOString().slice(0, 10),
@@ -140,7 +157,7 @@ export async function POST(request: Request) {
             giftwrap_charges: 0,
             transaction_charges: 0,
             total_discount: 0,
-            sub_total: Math.round(cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0)),
+            sub_total: cartSubtotal + codFee,
             length: 10.0,
             breadth: 15.0,
             height: 20.0,

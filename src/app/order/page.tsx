@@ -65,6 +65,22 @@ export default function ConfirmOrderPage() {
     fetchAddress();
   }, [userId, router]);
 
+  // COD is allowed only when EVERY item in the cart allows it
+  const codAllowed = cart.every((item) => item.codAvailable !== false);
+
+  // If COD is not allowed for this cart, force online payment
+  useEffect(() => {
+    if (!codAllowed && paymentMethod === "COD") {
+      setPaymentMethod("ONLINE");
+    }
+  }, [codAllowed, paymentMethod]);
+
+  // Totals: COD adds a surcharge on top of the subtotal
+  const COD_FEE_PERCENT = 15;
+  const subtotal = calculateCartTotal(cart);
+  const codFee = paymentMethod === "COD" ? Math.round((subtotal * COD_FEE_PERCENT) / 100) : 0;
+  const grandTotal = subtotal + codFee;
+
   // Handle COD order
   const handleCODOrder = async () => {
     if (!userId || !address) {
@@ -72,11 +88,17 @@ export default function ConfirmOrderPage() {
       return;
     }
 
+    // Safety guard — COD is not allowed when the cart contains COD-disabled products
+    if (!codAllowed) {
+      alert("Cash on Delivery is not available for some items in your cart. Please use online payment.");
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
-      // First create the order in database
-      const orderResponse = await api.post('/order', { userId });
+      // First create the order in database (server verifies COD eligibility and adds the COD fee)
+      const orderResponse = await api.post('/order', { userId, paymentMethod: "COD" });
 
       if (!orderResponse.data.success) {
         throw new Error(orderResponse.data.error || 'Failed to create order');
@@ -93,10 +115,11 @@ export default function ConfirmOrderPage() {
 
       alert("COD Order placed successfully!");
       // Redirect with payment method parameter to distinguish from online payments
-      router.push(`/order-confirmation?orderId=${shiprocketOrderId || orderId}&paymentMethod=COD`);
+      router.push(`/order-confirmation?orderId=${shiprocketOrderId || orderId}&paymentMethod=COD&total=${grandTotal}`);
     } catch (error) {
       console.error("Error processing COD order:", error);
-      alert(`Failed to process your order: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      const serverMessage = (error as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      alert(`Failed to process your order: ${serverMessage || (error instanceof Error ? error.message : 'Unknown error')}`);
     } finally {
       setIsProcessing(false);
     }
@@ -210,14 +233,22 @@ export default function ConfirmOrderPage() {
             <PaymentMethodSelector
               selectedMethod={paymentMethod}
               onMethodChange={setPaymentMethod}
+              codDisabled={!codAllowed}
             />
           </div>
 
           {/* Right Column: Cart Summary */}
           <div>
-            <CartSummary cart={cart} />
+            <CartSummary cart={cart} paymentMethod={paymentMethod} />
           </div>
         </div>
+
+        {/* Notice when COD is blocked by a cart item */}
+        {!codAllowed && (
+          <p className="mt-6 text-sm text-red-600 font-medium text-center">
+            ⚠️ Cash on Delivery is not available for some items in your cart. Please pay online.
+          </p>
+        )}
 
         {/* Place Order Button (bottom-right) */}
         <div className="mt-8 flex justify-end">
@@ -229,7 +260,7 @@ export default function ConfirmOrderPage() {
           >
             {isProcessing
               ? "⏳ Processing..."
-              : `✅ Place Order ${paymentMethod === "COD" ? "(COD)" : ""}`}
+              : `✅ Place Order ${paymentMethod === "COD" ? `(COD · ₹${grandTotal})` : ""}`}
           </button>
         </div>
       </div>

@@ -10,6 +10,7 @@ import api from "../utils/api";
   images: string[];     // Main product image
   packageSize: string; // Selected package size
   addedAt: string;   // Timestamp when added to cart
+  codAvailable?: boolean; // false = COD not allowed for this product
 }
 
 export const useCart = (userId: string) => {

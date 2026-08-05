@@ -5,13 +5,18 @@ import { v4 as uuidv4 } from "uuid";
 import { CartItem } from "../../types/types";
 interface CartSummaryProps {
   cart: CartItem[];
+  paymentMethod?: "ONLINE" | "COD"; // optional — when "COD", a COD fee line is shown
 }
 
-export const CartSummary: React.FC<CartSummaryProps> = ({ cart }) => {
+const COD_FEE_PERCENT = 15;
+
+export const CartSummary: React.FC<CartSummaryProps> = ({ cart, paymentMethod }) => {
   // Example shipping cost (adjust or fetch from backend as needed)
   const shippingCost = 0;
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const total = subtotal + shippingCost;
+  // COD surcharge applies only when Cash on Delivery is selected
+  const codFee = paymentMethod === "COD" ? Math.round((subtotal * COD_FEE_PERCENT) / 100) : 0;
+  const total = subtotal + shippingCost + codFee;
 
   return (
     <div className="border p-6 rounded-lg shadow-sm">
@@ -48,6 +53,12 @@ export const CartSummary: React.FC<CartSummaryProps> = ({ cart }) => {
           <span className="text-gray-600">Shipping</span>
           <span className="text-gray-800">₹{shippingCost}</span>
         </div>
+        {codFee > 0 && (
+          <div className="flex justify-between text-sm mb-2">
+            <span className="text-gray-600">COD Fee ({COD_FEE_PERCENT}%)</span>
+            <span className="text-gray-800">₹{codFee}</span>
+          </div>
+        )}
         <div className="flex justify-between font-semibold text-base mt-2">
           <span>Total</span>
           <span>₹{total}</span>

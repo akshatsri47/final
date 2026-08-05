@@ -52,6 +52,7 @@ export async function PUT(req: NextRequest) {
       images: productData.images?.[0] ?? "/placeholder.png", // Changed from "image" to "images"
       packageSize: selectedPackage?.packageSize ?? "Default Size",
       addedAt: new Date().toISOString(),
+      codAvailable: productData.codAvailable ?? true, // snapshot COD availability from product
     };
 
     const userData = userSnap.data();

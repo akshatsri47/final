@@ -37,7 +37,8 @@ import { cookies } from "next/headers";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { userId } = body; 
+    const { userId } = body;
+    const paymentMethod: "ONLINE" | "COD" = body.paymentMethod === "COD" ? "COD" : "ONLINE";
 
     if (!userId) {
       return NextResponse.json({ success: false, error: "User ID is required" }, { status: 400 });
@@ -60,8 +61,9 @@ export async function POST(req: NextRequest) {
 
     // ✅ Calculate Total Amount
     let totalAmount = 0;
+    const blockedCodProducts: string[] = []; // products that opted out of COD
     const finalCartItems = await Promise.all(
-      cartItems.map(async (item: { productId: string; quantity: number }) => {
+      cartItems.map(async (item: { productId: string; quantity: number; price?: number; name?: string }) => {
         const productRef = doc(db, "products", item.productId);
         const productSnap = await getDoc(productRef);
 
@@ -71,7 +73,18 @@ export async function POST(req: NextRequest) {
         }
 
         const productData = productSnap.data();
-        const price = productData?.pricing?.[0]?.price || 0; 
+
+        // COD enforcement: product explicitly opted out of Cash on Delivery
+        if (paymentMethod === "COD" && productData?.codAvailable === false) {
+          blockedCodProducts.push(productData?.name || item.name || item.productId);
+        }
+
+        // Prefer the cart's stored selling price (respects package size & discount);
+        // fall back to the first pricing tier for legacy cart items without a price
+        const price =
+          typeof item.price === "number" && item.price > 0
+            ? item.price
+            : productData?.pricing?.[0]?.price || 0;
 
         totalAmount += item.quantity * price;
 
@@ -90,11 +103,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "No valid products found in cart" }, { status: 400 });
     }
 
+    // ✅ Reject COD orders that contain COD-disabled products (server-side enforcement)
+    if (paymentMethod === "COD" && blockedCodProducts.length > 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Cash on Delivery is not available for: ${blockedCodProducts.join(", ")}. Please choose online payment.`,
+        },
+        { status: 400 }
+      );
+    }
+
+    // ✅ COD surcharge (15% of subtotal) — online payments have no fee
+    const COD_FEE_PERCENT = 15;
+    const codFee = paymentMethod === "COD" ? Math.round((totalAmount * COD_FEE_PERCENT) / 100) : 0;
+    const finalTotalAmount = totalAmount + codFee;
+
     // ✅ Create New Order in Firestore (Before Shiprocket API Call)
     const newOrder = {
       userId,
       items: filteredCartItems,
-      totalAmount,
+      totalAmount: finalTotalAmount,
+      paymentMethod,
+      codFee,
       status: "pending",
       createdAt: new Date().toISOString(),
       shiprocketTrackingId: "Fetching...",  // Temporary tracking ID

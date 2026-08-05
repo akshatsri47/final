@@ -5,11 +5,15 @@ export type PaymentMethod = 'ONLINE' | 'COD';
 interface PaymentMethodSelectorProps {
   selectedMethod: PaymentMethod;
   onMethodChange: (method: PaymentMethod) => void;
+  codDisabled?: boolean;  // true = COD not allowed for the current cart
+  codFeePercent?: number; // COD surcharge percentage hint (default 15)
 }
 
 export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({ 
   selectedMethod, 
-  onMethodChange 
+  onMethodChange,
+  codDisabled = false,
+  codFeePercent = 15,
 }) => {
   return (
     <div className="border p-6 rounded-lg shadow-sm">
@@ -30,9 +34,13 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
           <p className="text-sm text-gray-500 mt-2 ml-8">Pay securely online using credit card, debit card, or UPI</p>
         </div>
         
-        <div 
-          className={`p-4 border rounded-lg cursor-pointer transition-all ${selectedMethod === 'COD' ? 'border-indigo-500 bg-indigo-50' : 'hover:border-gray-400'}`}
-          onClick={() => onMethodChange('COD')}
+        <div
+          className={`p-4 border rounded-lg transition-all ${
+            codDisabled
+              ? 'opacity-50 cursor-not-allowed bg-gray-50'
+              : `cursor-pointer ${selectedMethod === 'COD' ? 'border-indigo-500 bg-indigo-50' : 'hover:border-gray-400'}`
+          }`}
+          onClick={() => { if (!codDisabled) onMethodChange('COD'); }}
         >
           <div className="flex items-center gap-3">
             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedMethod === 'COD' ? 'border-indigo-500' : 'border-gray-400'}`}>
@@ -40,7 +48,14 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
             </div>
             <div className="font-medium">Cash on Delivery (COD)</div>
           </div>
-          <p className="text-sm text-gray-500 mt-2 ml-8">Pay with cash when your order is delivered</p>
+          <p className="text-sm text-gray-500 mt-2 ml-8">
+            Pay with cash when your order is delivered (+{codFeePercent}% COD fee applies)
+          </p>
+          {codDisabled && (
+            <p className="text-sm text-red-500 mt-1 ml-8 font-medium">
+              COD is not available for some items in your cart — online payment only.
+            </p>
+          )}
         </div>
       </div>
     </div>

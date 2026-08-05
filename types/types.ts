@@ -33,6 +33,7 @@
       };
       benefits: string[];  
       discount?:number
+      codAvailable?: boolean;  // false = online payment only (COD disabled). Missing = COD allowed.
           // List of product benefits
     }
  
@@ -73,6 +74,7 @@
       quantity: number;
       price: number;
       addedAt: string | number | Date;
+      codAvailable?: boolean;  // snapshot from product; false = COD not allowed for this item
     }
     
   
@@ -80,9 +82,11 @@
     id: string;         // Firestore-generated Order ID
     userId: string;     // ID of the user who placed the order
     items: CartItem[];  // Array of ordered items
-    totalAmount: number;// Total price of the order
+    totalAmount: number;// Total price of the order (includes COD fee when applicable)
     status: "pending" | "processing" | "shipped" | "delivered"; // Order status
     shiprocketTrackingId?: string;
+    paymentMethod?: "ONLINE" | "COD"; // How the customer chose to pay
+    codFee?: number;      // COD surcharge (15% of subtotal) — 0 for online payments
     createdAt: string;  // Timestamp of order creation
   }
   
