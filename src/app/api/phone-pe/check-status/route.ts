@@ -23,6 +23,7 @@ export async function POST(req: NextRequest) {
         success: true,
         merchantOrderId,
         paymentState: response.state,
+        amount: response.amount ?? null, // amount in paise — used by verifyOrder to validate the payment
       });
     } catch (e) {
       console.error("Status check error:", e);

@@ -116,29 +116,15 @@ export default function CartPage() {
     }
   };
 
-  // Place the order and navigate to the address page on success
+  // Go to the secure checkout — orders are created ONLY through /order with a
+  // verified payment (full online amount, or the 15% COD advance). Never create
+  // unpaid orders directly from the cart.
   const placeOrder = async () => {
     if (!userId) return alert("User ID not found!");
     if (cart.length === 0) return alert("Cart is empty!");
-    try {
-      setOrderStatus("Placing order...");
-      const response = await fetch("/api/order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId }),
-      });
-      const data = await response.json();
-      if (!response.ok)
-        throw new Error(data.error || "Order placement failed");
-      setOrderStatus("🎉 Order Confirmed!");
-      setCart([]);
-      latestCartRef.current = [];
-      router.push("/address");
-    } catch (err) {
-      setOrderStatus(
-        `Error: ${err instanceof Error ? err.message : "Order placement failed."}`
-      );
-    }
+    setOrderStatus("Proceeding to secure checkout...");
+    await sendQuantityUpdates(); // flush pending quantity changes so checkout sees them
+    router.push("/order");
   };
 
   if (loading) {

@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { createShiprocketOrder, updateOrderStatus } from "@/components/Orderservice";
 
@@ -20,9 +20,15 @@ function OrderConfirmationContent() {
     const [isCodOrder, setIsCodOrder] = useState(false);
     const [codAdvanceAmount, setCodAdvanceAmount] = useState(0);
     const [codDueAmount, setCodDueAmount] = useState(0);
+    // Guard against double execution (React StrictMode / effect re-runs) —
+    // verification + Shiprocket creation must run only once per page load.
+    const hasRunRef = useRef(false);
 
     useEffect(() => {
         const handleOrderConfirmation = async () => {
+            if (hasRunRef.current) return;
+            hasRunRef.current = true;
+
             if (!orderId) {
                 setError("No Order ID Found. Please contact support.");
                 setLoading(false);
@@ -43,7 +49,7 @@ function OrderConfirmationContent() {
                 // carry the payment method) plus the COD advance / on-delivery split amounts
                 let orderPaymentMethod: string | null = paymentMethod;
                 try {
-                    const orderRes = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/order?orderId=${orderId}`);
+                    const orderRes = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/order?orderId=${orderId}&userId=${encodeURIComponent(userId)}`);
                     if (orderRes.data?.success && orderRes.data?.data) {
                         orderPaymentMethod = orderRes.data.data.paymentMethod ?? orderPaymentMethod;
                         setCodAdvanceAmount(orderRes.data.data.codAdvanceAmount ?? 0);
@@ -69,14 +75,15 @@ function OrderConfirmationContent() {
                 if (paymentSuccess) {
                     setSuccess(true);
                     
-                    const shipId = await createShiprocketOrder(userId, isCod ? "COD" : "ONLINE");
+                    const shipId = await createShiprocketOrder(userId, isCod ? "COD" : "ONLINE", orderId);
                     setShipRocketId(shipId);
-                    
+
                     // Update order status for successful payment
                     try {
                         await updateOrderStatus(
                             orderId,
-                            isCod ? "COD Advance Paid - Ready to Ship" : "Payment Verified - Ready to Ship!"
+                            isCod ? "COD Advance Paid - Ready to Ship" : "Payment Verified - Ready to Ship!",
+                            userId
                         );
                     } catch (statusError) {
                         console.warn("Failed to update order status:", statusError);
@@ -85,7 +92,7 @@ function OrderConfirmationContent() {
                 } else {
                     // Update order status for failed payment
                     try {
-                        await updateOrderStatus(orderId, "Payment Failed");
+                        await updateOrderStatus(orderId, "Payment Failed", userId);
                     } catch (statusError) {
                         console.warn("Failed to update order status:", statusError);
                     }

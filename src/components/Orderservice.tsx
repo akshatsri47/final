@@ -70,14 +70,14 @@ interface ShiprocketResponse {
 //   }
 // };
 
-export const createPhonePeOrder = async (amount: number): Promise<string> => {
+// The charged amount is derived server-side from the order document
+// (COD → 15% advance, ONLINE → full total). Clients never send amounts.
+export const createPhonePeOrder = async (orderId: string, userId: string): Promise<string> => {
   try {
-    const res = await axios.post("/api/createOrder", {
-      amount: amount * 100,
-    });
-    
+    const res = await axios.post("/api/createOrder", { orderId, userId });
+
     if (!res.data.success) {
-      throw new Error("Failed to create payment order");
+      throw new Error(res.data.error || "Failed to create payment order");
     }
 
     return res.data.redirectUrl;
@@ -107,12 +107,13 @@ export const createPhonePeOrder = async (amount: number): Promise<string> => {
 
 export const createShiprocketOrder = async (
   userId: string,
-  paymentMethod: PaymentMethod
+  paymentMethod: PaymentMethod,
+  orderId: string
 ): Promise<string> => {
   try {
     const shiprocketResponse = await axios.post<ShiprocketResponse>(
       "/api/ship",
-      { userId, paymentMethod },
+      { userId, paymentMethod, orderId },
       { headers: { "Content-Type": "application/json" } }
     );
 
@@ -157,13 +158,14 @@ export const createShiprocketOrder = async (
 //   payment.open();
 // };
 
-export const updateOrderStatus = async (orderId: string, status: string): Promise<boolean> => {
+export const updateOrderStatus = async (orderId: string, status: string, userId: string): Promise<boolean> => {
   try {
     console.log(`Updating order status: ${orderId} -> ${status}`);
-    
+
     const response = await axios.patch('/api/order', {
       orderId,
       status,
+      userId,
     }, {
       headers: {
         'Content-Type': 'application/json'

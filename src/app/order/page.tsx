@@ -107,8 +107,9 @@ export default function ConfirmOrderPage() {
       console.log("Order created for COD:", orderId);
 
       // Collect the 15% advance online via PhonePe — the remaining 85% is paid on delivery.
+      // The exact advance amount is computed server-side from the order document.
       // Shiprocket + status updates happen on the confirmation page after payment verification.
-      const redirectUrl = await createPhonePeOrder(codAdvanceAmount);
+      const redirectUrl = await createPhonePeOrder(orderId, userId);
       if (!redirectUrl) {
         throw new Error('Internal Error During Payment Initiation');
       }
@@ -133,8 +134,6 @@ export default function ConfirmOrderPage() {
 
     setIsProcessing(true);
 
-    const totalAmount = calculateCartTotal(cart);
-
     try {
       // First create the order in database
       const orderResponse = await api.post('/order', { userId });
@@ -143,10 +142,11 @@ export default function ConfirmOrderPage() {
         throw new Error(orderResponse.data.error || 'Failed to create order');
       }
 
-      console.log("Order created for online payment:", orderResponse.data.data.id);
+      const orderId = orderResponse.data.data.id;
+      console.log("Order created for online payment:", orderId);
 
-      // Then create payment
-      const redirectUrl = await createPhonePeOrder(totalAmount);
+      // Then create payment — the charged amount is taken server-side from the order document
+      const redirectUrl = await createPhonePeOrder(orderId, userId);
       if (!redirectUrl) {
         throw new Error('Internal Error During Payment Initiation');
       }

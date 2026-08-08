@@ -2,7 +2,6 @@ import axios from "axios";
 import { db } from "../../../../utils/firebase";
 import { doc, getDoc,updateDoc } from "firebase/firestore";
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import ShiprocketTokenManager from "@/lib/shiprocketAuth";
 
 
@@ -29,7 +28,6 @@ interface Address {
 
 interface UserData {
     address?: Address; // ✅ Now storing only one address (not an array)
-    cart?: CartItem[];
     email:string
 }
 
@@ -39,7 +37,7 @@ export async function POST(request: Request) {
 
     try {
         const body = await request.json();
-        const { userId, paymentMethod = "Prepaid" }: { userId: string; paymentMethod?: string } = body;
+        const { userId, paymentMethod = "Prepaid", orderId }: { userId: string; paymentMethod?: string; orderId?: string } = body;
 
         console.log("Received Request Body:", body);
 
@@ -66,16 +64,10 @@ export async function POST(request: Request) {
 
         const userData = userSnap.data() as UserData;
         const address = userData?.address || null; // ✅ Now fetching as a single object
-        const cartItems = userData?.cart || [];
-        const orderId =String((await cookies()).get('orderId')?.value);
-
-        const orderRef = doc(db,"orders",orderId);
-
 
         console.log("Fetched Address:", address);
-        console.log("Fetched Cart Items:", cartItems);
         console.log("Payment Method:", paymentMethod);
-        console.log("Fetching OrderId",orderId)
+        console.log("OrderId:", orderId);
 
         if (!address) {
             console.error("No valid address found for the user.");
@@ -85,18 +77,69 @@ export async function POST(request: Request) {
             );
         }
 
-        if (cartItems.length === 0) {
-            console.error("The cart is empty for the user.");
+        // ✅ Order ID must come from the client (the confirmation page has it from the
+        //    payment redirect) — never from a cookie that may be missing or stale.
+        if (!orderId || typeof orderId !== "string" || !orderId.trim()) {
+            console.error("Missing orderId in request body.");
             return NextResponse.json(
-                { success: false, error: "Cart is empty." },
+                { success: false, error: "Order ID is required." },
                 { status: 400 }
             );
         }
-        if(!orderId){
-            console.log("Error while getting orderId form cookies");
-            return NextResponse.json({
-                success:false, error:"Order Id error while fetching from cookies !"
-            },{status:404})
+
+        // ✅ Fetch the order — it is the single source of truth for items & amounts
+        const orderRef = doc(db, "orders", orderId);
+        const orderSnap = await getDoc(orderRef);
+
+        if (!orderSnap.exists()) {
+            console.error(`Order not found: ${orderId}`);
+            return NextResponse.json(
+                { success: false, error: "Order not found." },
+                { status: 404 }
+            );
+        }
+
+        const orderDoc = orderSnap.data();
+
+        if (orderDoc.userId !== userId) {
+            console.error(`User ${userId} is not the owner of order ${orderId}`);
+            return NextResponse.json(
+                { success: false, error: "Not authorized for this order." },
+                { status: 403 }
+            );
+        }
+
+        // ✅ Idempotency: never create a second Shiprocket order for the same order
+        const existingTrackingId = orderDoc.shiprocketTrackingId;
+        if (existingTrackingId && existingTrackingId !== "Fetching..." && existingTrackingId !== "Not Available") {
+            console.log(`Shiprocket order already exists for ${orderId} (${existingTrackingId}) — skipping duplicate creation.`);
+            return NextResponse.json({ success: true, data: { order_id: existingTrackingId, alreadyCreated: true } });
+        }
+
+        const orderItemsInput: CartItem[] = Array.isArray(orderDoc.items) ? orderDoc.items : [];
+        if (orderItemsInput.length === 0) {
+            console.error(`Order ${orderId} has no items.`);
+            return NextResponse.json(
+                { success: false, error: "Order has no items." },
+                { status: 400 }
+            );
+        }
+
+        // ✅ Normalize phone (+91 prefix / spaces / dashes → 10 digits) and pincode
+        const phoneDigits = String(address.phone || "").replace(/\D/g, "");
+        const phone10 = phoneDigits.length > 10 ? phoneDigits.slice(-10) : phoneDigits;
+        if (phone10.length !== 10) {
+            return NextResponse.json(
+                { success: false, error: "Invalid phone number in address (10 digits required)." },
+                { status: 400 }
+            );
+        }
+        const pincode = String(address.zip || "").replace(/\D/g, "");
+        if (pincode.length !== 6) {
+            return NextResponse.json(
+                { success: false, error: "Invalid pincode in address (6 digits required)." },
+                { status: 400 }
+            );
         }
 
         // Get valid token from token manager
@@ -105,12 +148,14 @@ export async function POST(request: Request) {
 
         console.log("Shiprocket API Token acquired from token manager.");
 
-        // ✅ Prepare the order data for Shiprocket
-        const orderItems = cartItems.map((item: CartItem) => ({
-            name: item.name,
-            sku: item.productId || `SKU_${item.name.replace(/\s+/g, "_").toUpperCase()}`,
+        // ✅ Prepare the order data for Shiprocket — items & amounts come from the
+        //    ORDER DOCUMENT (not the live cart, which may have changed or been cleared)
+        const round2 = (n: number) => Math.round(n * 100) / 100;
+        const orderItems = orderItemsInput.map((item: CartItem) => ({
+            name: item.name || item.productId || "Item",
+            sku: item.productId || `SKU_${String(item.name || "ITEM").replace(/\s+/g, "_").toUpperCase()}`,
             units: item.quantity,
-            selling_price: Math.round(item.price),
+            selling_price: round2(Number(item.price) || 0),
             discount: 0,
             tax: 0,
             hsn: 44122,
@@ -119,19 +164,17 @@ export async function POST(request: Request) {
         // Determine the correct payment method string for Shiprocket
         const shiprocketPaymentMethod = paymentMethod === "COD" ? "COD" : "Prepaid";
 
-        // ✅ COD split payment: 15% was already paid ONLINE at checkout, so the courier
-        //    must only collect the remaining 85%. The prepaid advance is applied as
-        //    `total_discount`, which reduces Shiprocket's collectable amount while
-        //    keeping sub_total consistent with the item list.
-        const cartSubtotal = Math.round(cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0));
-        let codAdvancePaid = 0;
+        // sub_total stays consistent with the itemized list (paise precision)
+        const subTotal = round2(orderItems.reduce((acc, item) => acc + item.selling_price * item.units, 0));
+
+        // ✅ COD split payment: the 15% advance was already paid ONLINE at checkout, so
+        //    the courier must collect EXACTLY codDueAmount at the door. The prepaid
+        //    advance is applied as `total_discount`, which reduces Shiprocket's
+        //    collectable amount while keeping sub_total consistent with the item list.
+        let totalDiscount = 0;
         if (shiprocketPaymentMethod === "COD") {
-            try {
-                const orderSnap = await getDoc(orderRef);
-                codAdvancePaid = orderSnap.exists() ? Number(orderSnap.data()?.codAdvanceAmount) || 0 : 0;
-            } catch (e) {
-                console.warn("Could not read codAdvanceAmount from order doc:", e);
-            }
+            const codDueAmount = Number(orderDoc.codDueAmount) || 0;
+            totalDiscount = Math.max(0, round2(subTotal - codDueAmount));
         }
 
         const orderData = {
@@ -143,19 +186,19 @@ export async function POST(request: Request) {
             billing_address: address.line1,
             billing_address_2: address.line2 || "",
             billing_city: address.city,
-            billing_pincode: parseInt(address.zip, 10),
+            billing_pincode: Number(pincode),
             billing_state: address.state,
             billing_country: address.country || "India",
             billing_email: userData.email,
-            billing_phone: parseInt(address.phone, 10),
+            billing_phone: Number(phone10),
             shipping_is_billing: true,
             order_items: orderItems,
             payment_method: shiprocketPaymentMethod,
             shipping_charges: 0,
             giftwrap_charges: 0,
             transaction_charges: 0,
-            total_discount: codAdvancePaid,
-            sub_total: cartSubtotal,
+            total_discount: totalDiscount,
+            sub_total: subTotal,
             length: 10.0,
             breadth: 15.0,
             height: 20.0,
@@ -165,29 +208,45 @@ export async function POST(request: Request) {
         console.log("Prepared Order Data:", JSON.stringify(orderData, null, 2));
 
         // ✅ Create the order in Shiprocket
-        const response = await axios.post(
-            `${SHIPROCKET_API_BASE}/orders/create/adhoc`,
-            orderData,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
+        try {
+            const response = await axios.post(
+                `${SHIPROCKET_API_BASE}/orders/create/adhoc`,
+                orderData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+
+            console.log("Shiprocket API Response:", response.data, response.data.data);
+            await updateDoc(orderRef, { shiprocketTrackingId: response.data.order_id || "Not Available" });
+            return NextResponse.json({ success: true, data: response.data });
+        } catch (shipError: unknown) {
+            if (axios.isAxiosError(shipError) && shipError.response) {
+                console.error("Shiprocket Error Response Data:", shipError.response.data);
+                // Shiprocket rejects a re-created order_id — treat as already created
+                // so confirmation-page retries don't show a false failure.
+                const errText = JSON.stringify(shipError.response.data || {});
+                if (/duplicat|already/i.test(errText)) {
+                    console.warn(`Shiprocket reports the order already exists for ${orderId} — treating as created.`);
+                    try {
+                        await updateDoc(orderRef, { shiprocketTrackingId: orderId });
+                    } catch (e) {
+                        console.warn("Could not persist fallback tracking id:", e);
+                    }
+                    return NextResponse.json({ success: true, data: { order_id: orderId, duplicate: true } });
+                }
+                return NextResponse.json(
+                    { success: false, error: shipError.response.data.message || "Failed to create Shiprocket order." },
+                    { status: shipError.response.status }
+                );
             }
-        );
-        
-        console.log("Shiprocket API Response:", response.data,response.data.data);
-        await updateDoc(orderRef, { shiprocketTrackingId: response.data.order_id || "Not Available" });
-        return NextResponse.json({ success: true, data: response.data });
+            throw shipError; // non-axios errors go to the outer catch
+        }
     } catch (error: unknown) {
         console.error("Shiprocket Order Error:", error);
-        if (axios.isAxiosError(error) && error.response) {
-            console.error("Error Response Data:", error.response.data);
-            return NextResponse.json(
-                { success: false, error: error.response.data.message || "Failed to create Shiprocket order." },
-                { status: error.response.status }
-            );
-        }
         return NextResponse.json(
             { success: false, error: "Failed to create Shiprocket order." },
             { status: 500 }

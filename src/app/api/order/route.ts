@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     let totalAmount = 0;
     const blockedCodProducts: string[] = []; // products that opted out of COD
     const finalCartItems = await Promise.all(
-      cartItems.map(async (item: { productId: string; quantity: number; price?: number; name?: string }) => {
+      cartItems.map(async (item: { productId: string; quantity: number; price?: number; name?: string; packageSize?: string }) => {
         const productRef = doc(db, "products", item.productId);
         const productSnap = await getDoc(productRef);
 
@@ -81,15 +81,19 @@ export async function POST(req: NextRequest) {
 
         // Prefer the cart's stored selling price (respects package size & discount);
         // fall back to the first pricing tier for legacy cart items without a price
-        const price =
+        const rawPrice =
           typeof item.price === "number" && item.price > 0
             ? item.price
             : productData?.pricing?.[0]?.price || 0;
+        // Normalize to paise precision — kills float artifacts like 123.45000000000001
+        const price = Math.round(rawPrice * 100) / 100;
 
         totalAmount += item.quantity * price;
 
         return {
           productId: item.productId,
+          name: productData?.name || item.name || "Unnamed Product",
+          packageSize: item.packageSize || "",
           quantity: item.quantity,
           price,
         };
@@ -116,10 +120,13 @@ export async function POST(req: NextRequest) {
 
     // ✅ COD split payment: 15% is paid ONLINE upfront, the remaining 85% is
     //    collected in cash on delivery. No surcharge — the order total is unchanged.
+    //    All amounts are normalized to paise precision.
+    totalAmount = Math.round(totalAmount * 100) / 100;
     const COD_ADVANCE_PERCENT = 15;
     const codAdvanceAmount =
       paymentMethod === "COD" ? Math.round((totalAmount * COD_ADVANCE_PERCENT) / 100) : 0;
-    const codDueAmount = paymentMethod === "COD" ? totalAmount - codAdvanceAmount : 0;
+    const codDueAmount =
+      paymentMethod === "COD" ? Math.round((totalAmount - codAdvanceAmount) * 100) / 100 : 0;
 
     // ✅ Create New Order in Firestore (Before Shiprocket API Call)
     const newOrder = {
@@ -129,6 +136,7 @@ export async function POST(req: NextRequest) {
       paymentMethod,
       codAdvanceAmount,
       codDueAmount,
+      paymentVerified: false, // set true by /api/verifyOrder after PhonePe confirms amount + state
       status: "pending",
       createdAt: new Date().toISOString(),
       shiprocketTrackingId: "Fetching...",  // Temporary tracking ID
@@ -193,12 +201,19 @@ export async function GET(req: NextRequest) {
     const orderId = url.searchParams.get("orderId");
 
     if (orderId) {
-      // ✅ Fetch a Single Order
+      // ✅ Fetch a Single Order — requires the owner's userId
+      if (!userId) {
+        return NextResponse.json({ success: false, error: "User ID is required" }, { status: 400 });
+      }
       const orderRef = doc(db, "orders", orderId);
       const orderSnap = await getDoc(orderRef);
 
       if (!orderSnap.exists()) {
         return NextResponse.json({ success: false, error: "Order not found" }, { status: 404 });
+      }
+
+      if (orderSnap.data()?.userId !== userId) {
+        return NextResponse.json({ success: false, error: "Not authorized to view this order" }, { status: 403 });
       }
 
       return NextResponse.json(
@@ -230,11 +245,11 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { orderId ,status} = await req.json();
+    const { orderId, status, userId } = await req.json();
 
-    if (!orderId) {
+    if (!orderId || !userId) {
       return NextResponse.json(
-        { success: false, error: "Missing orderId in request body" },
+        { success: false, error: "Missing orderId or userId in request body" },
         { status: 400 }
       );
     }
@@ -246,6 +261,14 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json(
         { success: false, error: "Order not found" },
         { status: 404 }
+      );
+    }
+
+    // ✅ Only the order's owner may change its status
+    if (orderSnap.data()?.userId !== userId) {
+      return NextResponse.json(
+        { success: false, error: "Not authorized to update this order" },
+        { status: 403 }
       );
     }
 

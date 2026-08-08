@@ -21,11 +21,13 @@ export default function OrderDetailsPage() {
 
   useEffect(() => {
     fetchOrderDetails();
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   const fetchOrderDetails = async () => {
     try {
-      const response = await fetch(`/api/order?orderId=${id}`);
+      const userId = localStorage.getItem("userId") || "";
+      const response = await fetch(`/api/order?orderId=${id}&userId=${encodeURIComponent(userId)}`);
       const data = await response.json();
       if (data.success) {
         setOrder(data.data);

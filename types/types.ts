@@ -89,6 +89,8 @@
     codAdvanceAmount?: number; // COD: 15% advance paid online at checkout — 0 for full online payments
     codDueAmount?: number;     // COD: remaining 85% collected in cash on delivery — 0 for full online payments
     codFee?: number;      // LEGACY: COD surcharge stored on historical orders (no longer charged)
+    paymentVerified?: boolean; // true once PhonePe payment (full online amount or COD advance) is verified server-side
+    paidAmount?: number;  // amount actually paid online, in rupees (from the PhonePe status check)
     createdAt: string;  // Timestamp of order creation
   }
   
