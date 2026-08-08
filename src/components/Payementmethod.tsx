@@ -5,15 +5,15 @@ export type PaymentMethod = 'ONLINE' | 'COD';
 interface PaymentMethodSelectorProps {
   selectedMethod: PaymentMethod;
   onMethodChange: (method: PaymentMethod) => void;
-  codDisabled?: boolean;  // true = COD not allowed for the current cart
-  codFeePercent?: number; // COD surcharge percentage hint (default 15)
+  codDisabled?: boolean;      // true = COD not allowed for the current cart
+  codAdvancePercent?: number; // COD advance paid online upfront (default 15%)
 }
 
 export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({ 
   selectedMethod, 
   onMethodChange,
   codDisabled = false,
-  codFeePercent = 15,
+  codAdvancePercent = 15,
 }) => {
   return (
     <div className="border p-6 rounded-lg shadow-sm">
@@ -49,7 +49,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
             <div className="font-medium">Cash on Delivery (COD)</div>
           </div>
           <p className="text-sm text-gray-500 mt-2 ml-8">
-            Pay with cash when your order is delivered (+{codFeePercent}% COD fee applies)
+            Pay {codAdvancePercent}% online now — remaining {100 - codAdvancePercent}% in cash when your order is delivered
           </p>
           {codDisabled && (
             <p className="text-sm text-red-500 mt-1 ml-8 font-medium">

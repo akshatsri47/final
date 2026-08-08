@@ -16,6 +16,9 @@ interface Order {
   createdAt: string;
   shiprocketTrackingId?: string;
   items: CartItem[];
+  paymentMethod?: "ONLINE" | "COD";
+  codAdvanceAmount?: number; // COD: 15% paid online at checkout
+  codDueAmount?: number;     // COD: 85% due on delivery
 }
 
 export default function OrdersPage() {
@@ -67,6 +70,12 @@ export default function OrdersPage() {
             <div key={order.id} className="bg-white shadow-md rounded-lg p-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-2">Order ID: {order.id}</h2>
               <p className="text-gray-600">Total Amount: <span className="font-bold">₹{order.totalAmount}</span></p>
+              {order.paymentMethod === "COD" && (order.codDueAmount ?? 0) > 0 && (
+                <p className="text-gray-600">
+                  Paid online: <span className="font-bold text-green-700">₹{order.codAdvanceAmount}</span>
+                  {" · "}Due on delivery: <span className="font-bold">₹{order.codDueAmount}</span>
+                </p>
+              )}
               <p className="text-gray-600">Status: <span className="font-bold">{order.status}</span></p>
               <p className="text-gray-600">Placed on: {new Date(order.createdAt).toLocaleString()}</p>
 

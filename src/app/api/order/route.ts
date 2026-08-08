@@ -114,18 +114,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ✅ COD surcharge (15% of subtotal) — online payments have no fee
-    const COD_FEE_PERCENT = 15;
-    const codFee = paymentMethod === "COD" ? Math.round((totalAmount * COD_FEE_PERCENT) / 100) : 0;
-    const finalTotalAmount = totalAmount + codFee;
+    // ✅ COD split payment: 15% is paid ONLINE upfront, the remaining 85% is
+    //    collected in cash on delivery. No surcharge — the order total is unchanged.
+    const COD_ADVANCE_PERCENT = 15;
+    const codAdvanceAmount =
+      paymentMethod === "COD" ? Math.round((totalAmount * COD_ADVANCE_PERCENT) / 100) : 0;
+    const codDueAmount = paymentMethod === "COD" ? totalAmount - codAdvanceAmount : 0;
 
     // ✅ Create New Order in Firestore (Before Shiprocket API Call)
     const newOrder = {
       userId,
       items: filteredCartItems,
-      totalAmount: finalTotalAmount,
+      totalAmount,
       paymentMethod,
-      codFee,
+      codAdvanceAmount,
+      codDueAmount,
       status: "pending",
       createdAt: new Date().toISOString(),
       shiprocketTrackingId: "Fetching...",  // Temporary tracking ID

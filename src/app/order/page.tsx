@@ -16,9 +16,7 @@ import {
   PaymentMethod,
 } from "../../components/Payementmethod";
 import {
-  createShiprocketOrder,
   createPhonePeOrder,
-  updateOrderStatus,
 } from "../../components/Orderservice";
 
 
@@ -75,11 +73,11 @@ export default function ConfirmOrderPage() {
     }
   }, [codAllowed, paymentMethod]);
 
-  // Totals: COD adds a surcharge on top of the subtotal
-  const COD_FEE_PERCENT = 15;
+  // Totals: no COD surcharge — 15% is paid online now, the remaining 85% on delivery
+  const COD_ADVANCE_PERCENT = 15;
   const subtotal = calculateCartTotal(cart);
-  const codFee = paymentMethod === "COD" ? Math.round((subtotal * COD_FEE_PERCENT) / 100) : 0;
-  const grandTotal = subtotal + codFee;
+  const codAdvanceAmount =
+    paymentMethod === "COD" ? Math.round((subtotal * COD_ADVANCE_PERCENT) / 100) : 0;
 
   // Handle COD order
   const handleCODOrder = async () => {
@@ -97,7 +95,8 @@ export default function ConfirmOrderPage() {
     setIsProcessing(true);
 
     try {
-      // First create the order in database (server verifies COD eligibility and adds the COD fee)
+      // First create the order in database (server verifies COD eligibility and
+      // stores the 15% advance / 85% on-delivery split on the order)
       const orderResponse = await api.post('/order', { userId, paymentMethod: "COD" });
 
       if (!orderResponse.data.success) {
@@ -107,15 +106,15 @@ export default function ConfirmOrderPage() {
       const orderId = orderResponse.data.data.id;
       console.log("Order created for COD:", orderId);
 
-      // Then create shiprocket order
-      const shiprocketOrderId = await createShiprocketOrder(userId, "COD");
+      // Collect the 15% advance online via PhonePe — the remaining 85% is paid on delivery.
+      // Shiprocket + status updates happen on the confirmation page after payment verification.
+      const redirectUrl = await createPhonePeOrder(codAdvanceAmount);
+      if (!redirectUrl) {
+        throw new Error('Internal Error During Payment Initiation');
+      }
 
-      // Update order status to COD confirmed
-      await updateOrderStatus(orderId, "COD Order Confirmed - Ready to Ship");
-
-      alert("COD Order placed successfully!");
-      // Redirect with payment method parameter to distinguish from online payments
-      router.push(`/order-confirmation?orderId=${shiprocketOrderId || orderId}&paymentMethod=COD&total=${grandTotal}`);
+      console.log("Redirecting to PhonePe for COD advance payment:", redirectUrl);
+      window.location.href = redirectUrl;
     } catch (error) {
       console.error("Error processing COD order:", error);
       const serverMessage = (error as { response?: { data?: { error?: string } } })?.response?.data?.error;
@@ -260,7 +259,7 @@ export default function ConfirmOrderPage() {
           >
             {isProcessing
               ? "⏳ Processing..."
-              : `✅ Place Order ${paymentMethod === "COD" ? `(COD · ₹${grandTotal})` : ""}`}
+              : `✅ Place Order ${paymentMethod === "COD" ? `(COD · Pay ₹${codAdvanceAmount} now)` : ""}`}
           </button>
         </div>
       </div>

@@ -82,11 +82,13 @@
     id: string;         // Firestore-generated Order ID
     userId: string;     // ID of the user who placed the order
     items: CartItem[];  // Array of ordered items
-    totalAmount: number;// Total price of the order (includes COD fee when applicable)
+    totalAmount: number;// Total price of the order (no COD surcharge)
     status: "pending" | "processing" | "shipped" | "delivered"; // Order status
     shiprocketTrackingId?: string;
     paymentMethod?: "ONLINE" | "COD"; // How the customer chose to pay
-    codFee?: number;      // COD surcharge (15% of subtotal) — 0 for online payments
+    codAdvanceAmount?: number; // COD: 15% advance paid online at checkout — 0 for full online payments
+    codDueAmount?: number;     // COD: remaining 85% collected in cash on delivery — 0 for full online payments
+    codFee?: number;      // LEGACY: COD surcharge stored on historical orders (no longer charged)
     createdAt: string;  // Timestamp of order creation
   }
   
