@@ -151,31 +151,58 @@ export async function POST(request: Request) {
         // ✅ Prepare the order data for Shiprocket — items & amounts come from the
         //    ORDER DOCUMENT (not the live cart, which may have changed or been cleared)
         const round2 = (n: number) => Math.round(n * 100) / 100;
+
+        // Determine the correct payment method string for Shiprocket
+        const shiprocketPaymentMethod = paymentMethod === "COD" ? "COD" : "Prepaid";
+
+        const fullSubTotal = round2(
+            orderItemsInput.reduce((acc, item) => acc + round2(Number(item.price) || 0) * item.quantity, 0)
+        );
+
+        // ✅ COD split payment: the 15% advance was ALREADY collected online via PhonePe.
+        //    Shiprocket has no "advance paid" field, and passing it as `total_discount`
+        //    mislabels it as a discount in the panel — so a split-COD shipment is created
+        //    at the COLLECTABLE value only (the 85% due): item prices are scaled down
+        //    proportionally, total_discount stays 0, and the advance is noted in `comment`.
+        const codDueAmount = shiprocketPaymentMethod === "COD" ? Number(orderDoc.codDueAmount) || 0 : 0;
+        const isSplitCod =
+            shiprocketPaymentMethod === "COD" && codDueAmount > 0 && fullSubTotal > 0 && codDueAmount < fullSubTotal;
+        const collectable = isSplitCod ? codDueAmount : fullSubTotal;
+        const priceFactor = isSplitCod ? codDueAmount / fullSubTotal : 1;
+
         const orderItems = orderItemsInput.map((item: CartItem) => ({
             name: item.name || item.productId || "Item",
             sku: item.productId || `SKU_${String(item.name || "ITEM").replace(/\s+/g, "_").toUpperCase()}`,
             units: item.quantity,
-            selling_price: round2(Number(item.price) || 0),
+            selling_price: round2((Number(item.price) || 0) * priceFactor),
             discount: 0,
             tax: 0,
             hsn: 44122,
         }));
 
-        // Determine the correct payment method string for Shiprocket
-        const shiprocketPaymentMethod = paymentMethod === "COD" ? "COD" : "Prepaid";
+        // sub_total must stay consistent with the itemized list (paise precision)
+        let subTotal = round2(orderItems.reduce((acc, item) => acc + item.selling_price * item.units, 0));
 
-        // sub_total stays consistent with the itemized list (paise precision)
-        const subTotal = round2(orderItems.reduce((acc, item) => acc + item.selling_price * item.units, 0));
-
-        // ✅ COD split payment: the 15% advance was already paid ONLINE at checkout, so
-        //    the courier must collect EXACTLY codDueAmount at the door. The prepaid
-        //    advance is applied as `total_discount`, which reduces Shiprocket's
-        //    collectable amount while keeping sub_total consistent with the item list.
-        let totalDiscount = 0;
-        if (shiprocketPaymentMethod === "COD") {
-            const codDueAmount = Number(orderDoc.codDueAmount) || 0;
-            totalDiscount = Math.max(0, round2(subTotal - codDueAmount));
+        // Fix paise-level rounding drift so the courier collects EXACTLY the due amount
+        if (isSplitCod && orderItems.length > 0) {
+            const drift = round2(collectable - subTotal);
+            if (drift !== 0) {
+                const singleUnitIdx = orderItems.findIndex((i) => i.units === 1);
+                const target = singleUnitIdx >= 0 ? singleUnitIdx : 0;
+                const adjustment = singleUnitIdx >= 0 ? drift : drift / orderItems[0].units;
+                orderItems[target].selling_price = round2(orderItems[target].selling_price + adjustment);
+                subTotal = round2(orderItems.reduce((acc, item) => acc + item.selling_price * item.units, 0));
+            }
         }
+
+        // The advance was a payment, not a discount — never sent as total_discount.
+        const totalDiscount = 0;
+        const codAdvancePaid = isSplitCod
+            ? Number(orderDoc.codAdvanceAmount) || round2(fullSubTotal - collectable)
+            : 0;
+        const orderComment = isSplitCod
+            ? `COD split: ₹${codAdvancePaid} advance already paid online via PhonePe. Collect ₹${collectable} on delivery. (Full order value ₹${fullSubTotal})`
+            : "";
 
         const orderData = {
             order_id: orderId,
@@ -199,6 +226,7 @@ export async function POST(request: Request) {
             transaction_charges: 0,
             total_discount: totalDiscount,
             sub_total: subTotal,
+            comment: orderComment,
             length: 10.0,
             breadth: 15.0,
             height: 20.0,
