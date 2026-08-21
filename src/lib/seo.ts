@@ -158,6 +158,8 @@ export function generateOrganizationStructuredData(): JsonLd {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: "KrishDoctor",
+    alternateName: ["Krish Doctor", "Krashi Doctor", "Gupta Trading Company"],
+    "@id": "https://www.krishdoctor.in/#organization",
     url: "https://www.krishdoctor.in/",
     logo: "https://www.krishdoctor.in/brand-logo.png",
     description:
@@ -177,6 +179,21 @@ export function generateOrganizationStructuredData(): JsonLd {
       "https://twitter.com/krishdoctor",
       "https://instagram.com/krishdoctor",
     ],
+  };
+}
+
+export function generateWebsiteStructuredData(): JsonLd {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": "https://www.krishdoctor.in/#website",
+    url: "https://www.krishdoctor.in/",
+    name: "KrishDoctor",
+    alternateName: ["Krish Doctor", "Krashi Doctor", "krishdoctor.in"],
+    publisher: {
+      "@id": "https://www.krishdoctor.in/#organization",
+    },
+    inLanguage: "en-IN",
   };
 }
 

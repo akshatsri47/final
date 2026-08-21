@@ -2,7 +2,7 @@
 import "./globals.css";
 import { Metadata } from "next";
 import Script from "next/script";
-import { generateOrganizationStructuredData } from "@/lib/seo";
+import { generateOrganizationStructuredData, generateWebsiteStructuredData } from "@/lib/seo";
 import StructuredDataComponent from "@/components/StructuredData";
 import Navbar from "@/components/Navbar";
 import Footer from "../components/Footer";
@@ -11,8 +11,9 @@ import GoogleTranslateScript from "@/components/GoogleTranslateScript";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.krishdoctor.in'),
+  applicationName: 'KrishDoctor',
   title: {
-    default: 'Krashi Doctor | Gupta Trading Company',
+    default: 'KrishDoctor | Agricultural Solutions & Products',
     template: '%s | KrishDoctor - Agricultural Solutions'
   },
   description: 'Leading agricultural solutions provider offering high-quality products for farmers. Shop herbicides, pesticides, fertilizers and more.',
@@ -83,6 +84,7 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#4f8e42" />
         <link rel="manifest" href="/manifest.json" />
         <StructuredDataComponent data={generateOrganizationStructuredData()} />
+        <StructuredDataComponent data={generateWebsiteStructuredData()} />
         {/* Google Tag Manager */}
         <Script id="google-tag-manager" strategy="afterInteractive">
           {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
