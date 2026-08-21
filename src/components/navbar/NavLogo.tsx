@@ -4,19 +4,19 @@ import Image from "next/image";
 
 export default function NavLogo() {
   return (
-    <div className="flex-shrink-0">
+    <div className="h-16 w-20 flex-shrink-0 overflow-hidden">
       <Link 
         href="/" 
-        className="flex items-center transition-transform hover:scale-105"
+        className="flex h-full w-full items-center justify-center transition-transform hover:scale-105"
         aria-label="Krashi Doctor home"
       >
         <Image
           src="/brand-logo.png"
           alt="Krashi Doctor - Gupta Trading Company"
-          width={108}
-          height={81}
+          width={80}
+          height={64}
           priority
-          className="h-14 w-auto object-contain mix-blend-multiply md:h-16"
+          className="h-16 w-20 object-contain mix-blend-multiply"
         />
       </Link>
     </div>
