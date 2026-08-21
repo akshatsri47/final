@@ -37,7 +37,7 @@ export async function POST(request: Request) {
 
     try {
         const body = await request.json();
-        const { userId, paymentMethod = "Prepaid", orderId }: { userId: string; paymentMethod?: string; orderId?: string } = body;
+        const { userId, orderId }: { userId: string; paymentMethod?: string; orderId?: string } = body;
 
         console.log("Received Request Body:", body);
 
@@ -66,7 +66,6 @@ export async function POST(request: Request) {
         const address = userData?.address || null; // ✅ Now fetching as a single object
 
         console.log("Fetched Address:", address);
-        console.log("Payment Method:", paymentMethod);
         console.log("OrderId:", orderId);
 
         if (!address) {
@@ -106,6 +105,13 @@ export async function POST(request: Request) {
             return NextResponse.json(
                 { success: false, error: "Not authorized for this order." },
                 { status: 403 }
+            );
+        }
+
+        if (orderDoc.paymentMethod !== "FULL_COD" && !orderDoc.paymentVerified) {
+            return NextResponse.json(
+                { success: false, error: "Advance payment has not been verified for this order." },
+                { status: 409 }
             );
         }
 
@@ -153,7 +159,11 @@ export async function POST(request: Request) {
         const round2 = (n: number) => Math.round(n * 100) / 100;
 
         // Determine the correct payment method string for Shiprocket
-        const shiprocketPaymentMethod = paymentMethod === "COD" ? "COD" : "Prepaid";
+        const storedPaymentMethod = orderDoc.paymentMethod;
+        if (!["ONLINE", "COD", "FULL_COD"].includes(storedPaymentMethod)) {
+            return NextResponse.json({ success: false, error: "Order has an invalid payment method." }, { status: 409 });
+        }
+        const shiprocketPaymentMethod = storedPaymentMethod === "ONLINE" ? "Prepaid" : "COD";
 
         const fullSubTotal = round2(
             orderItemsInput.reduce((acc, item) => acc + round2(Number(item.price) || 0) * item.quantity, 0)
@@ -164,11 +174,12 @@ export async function POST(request: Request) {
         //    mislabels it as a discount in the panel — so a split-COD shipment is created
         //    at the COLLECTABLE value only (the 85% due): item prices are scaled down
         //    proportionally, total_discount stays 0, and the advance is noted in `comment`.
-        const codDueAmount = shiprocketPaymentMethod === "COD" ? Number(orderDoc.codDueAmount) || 0 : 0;
+        const codDueAmount = storedPaymentMethod === "COD" ? Number(orderDoc.codDueAmount) || 0 : 0;
         const isSplitCod =
-            shiprocketPaymentMethod === "COD" && codDueAmount > 0 && fullSubTotal > 0 && codDueAmount < fullSubTotal;
-        const collectable = isSplitCod ? codDueAmount : fullSubTotal;
-        const priceFactor = isSplitCod ? codDueAmount / fullSubTotal : 1;
+            storedPaymentMethod === "COD" && codDueAmount > 0 && fullSubTotal > 0;
+        const targetShipmentValue = storedPaymentMethod === "COD" ? codDueAmount : Number(orderDoc.totalAmount) || fullSubTotal;
+        const collectable = targetShipmentValue;
+        const priceFactor = fullSubTotal > 0 ? targetShipmentValue / fullSubTotal : 1;
 
         const orderItems = orderItemsInput.map((item: CartItem) => ({
             name: item.name || item.productId || "Item",
@@ -184,7 +195,7 @@ export async function POST(request: Request) {
         let subTotal = round2(orderItems.reduce((acc, item) => acc + item.selling_price * item.units, 0));
 
         // Fix paise-level rounding drift so the courier collects EXACTLY the due amount
-        if (isSplitCod && orderItems.length > 0) {
+        if (orderItems.length > 0) {
             const drift = round2(collectable - subTotal);
             if (drift !== 0) {
                 const singleUnitIdx = orderItems.findIndex((i) => i.units === 1);

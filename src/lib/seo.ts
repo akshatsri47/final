@@ -159,7 +159,7 @@ export function generateOrganizationStructuredData(): JsonLd {
     "@type": "Organization",
     name: "KrishDoctor",
     url: "https://www.krishdoctor.in/",
-    logo: "https://www.krishdoctor.in/logo.png",
+    logo: "https://www.krishdoctor.in/brand-logo.png",
     description:
       "Leading agricultural solutions provider offering high-quality products for farmers",
     address: {
@@ -276,7 +276,7 @@ export function generateArticleStructuredData(article: ArticleInput): JsonLd {
       name: "KrishDoctor",
       logo: {
         "@type": "ImageObject",
-        url: "https://www.krishdoctor.in/logo.png"
+        url: "https://www.krishdoctor.in/brand-logo.png"
       }
     },
     mainEntityOfPage: {

@@ -10,11 +10,12 @@ import { convertToDate } from '../../../types/firebase';
 
 interface BlogDetailClientProps {
   blogId: string;
+  initialBlog?: BlogData;
 }
 
-export default function BlogDetailClient({ blogId }: BlogDetailClientProps) {
-  const [blog, setBlog] = useState<BlogData | null>(null);
-  const [loading, setLoading] = useState(true);
+export default function BlogDetailClient({ blogId, initialBlog }: BlogDetailClientProps) {
+  const [blog, setBlog] = useState<BlogData | null>(initialBlog || null);
+  const [loading, setLoading] = useState(!initialBlog);
   const [error, setError] = useState<string | null>(null);
 
   const fetchBlog = useCallback(async () => {

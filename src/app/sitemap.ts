@@ -77,6 +77,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Fetch blog pages for dynamic sitemap entries
   let blogPages: MetadataRoute.Sitemap = []
+  let blogCategoryPages: MetadataRoute.Sitemap = []
   
   try {
     // Fetch all published blogs for sitemap
@@ -88,10 +89,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly' as const,
       priority: 0.8,
     }))
+    const categories = Array.from(new Set(blogsResponse.blogs.flatMap((blog) => blog.categories)))
+    blogCategoryPages = categories.map((category) => ({
+      url: `${baseUrl}/blogs?category=${encodeURIComponent(category)}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.6,
+    }))
   } catch (error) {
     console.error('Error generating blog sitemap entries:', error)
     // Continue without blog pages if there's an error
   }
 
-  return [...staticPages, ...blogPages]
+  return [...staticPages, ...blogPages, ...blogCategoryPages]
 }

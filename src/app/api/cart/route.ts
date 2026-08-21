@@ -53,6 +53,7 @@ export async function PUT(req: NextRequest) {
       packageSize: selectedPackage?.packageSize ?? "Default Size",
       addedAt: new Date().toISOString(),
       codAvailable: productData.codAvailable ?? true, // snapshot COD availability from product
+      paymentEligibility: productData.paymentEligibility ?? (productData.codAvailable === false ? "PREPAID_ONLY" : "PARTIAL_COD_AND_PREPAID"),
     };
 
     const userData = userSnap.data();
@@ -94,7 +95,18 @@ export async function GET(req: NextRequest) {
     }
 
     const userData = userSnap.data();
-    return NextResponse.json({ success: true, cart: userData.cart || [] }, { status: 200 });
+    const cart = await Promise.all((userData.cart || []).map(async (item: CartItem) => {
+      if (!item.productId) return item;
+      const productSnap = await getDoc(doc(db, "products", item.productId));
+      if (!productSnap.exists()) return item;
+      const product = productSnap.data();
+      return {
+        ...item,
+        codAvailable: product.codAvailable !== false,
+        paymentEligibility: product.paymentEligibility ?? (product.codAvailable === false ? "PREPAID_ONLY" : "PARTIAL_COD_AND_PREPAID"),
+      };
+    }));
+    return NextResponse.json({ success: true, cart }, { status: 200 });
   } catch (error) {
     console.error("Error fetching cart:", error);
     return NextResponse.json({ success: false, error: "Error fetching cart" }, { status: 500 });

@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 import { Order } from "../../../../types/types";
 import { cookies } from "next/headers";
+import { COD_ADVANCE_PERCENT, PaymentMethod, resolveCartPaymentRules, roundCurrency } from "@/lib/paymentEligibility";
 
 
 
@@ -38,7 +39,10 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { userId } = body;
-    const paymentMethod: "ONLINE" | "COD" = body.paymentMethod === "COD" ? "COD" : "ONLINE";
+    const paymentMethod = (body.paymentMethod ?? "ONLINE") as PaymentMethod;
+    if (!["ONLINE", "COD", "FULL_COD"].includes(paymentMethod)) {
+      return NextResponse.json({ success: false, error: "Invalid payment method" }, { status: 400 });
+    }
 
     if (!userId) {
       return NextResponse.json({ success: false, error: "User ID is required" }, { status: 400 });
@@ -61,7 +65,6 @@ export async function POST(req: NextRequest) {
 
     // ✅ Calculate Total Amount
     let totalAmount = 0;
-    const blockedCodProducts: string[] = []; // products that opted out of COD
     const finalCartItems = await Promise.all(
       cartItems.map(async (item: { productId: string; quantity: number; price?: number; name?: string; packageSize?: string }) => {
         const productRef = doc(db, "products", item.productId);
@@ -74,10 +77,7 @@ export async function POST(req: NextRequest) {
 
         const productData = productSnap.data();
 
-        // COD enforcement: product explicitly opted out of Cash on Delivery
-        if (paymentMethod === "COD" && productData?.codAvailable === false) {
-          blockedCodProducts.push(productData?.name || item.name || item.productId);
-        }
+        const productEligibility = productData?.paymentEligibility;
 
         // Prefer the cart's stored selling price (respects package size & discount);
         // fall back to the first pricing tier for legacy cart items without a price
@@ -96,6 +96,8 @@ export async function POST(req: NextRequest) {
           packageSize: item.packageSize || "",
           quantity: item.quantity,
           price,
+          codAvailable: productData?.codAvailable !== false,
+          paymentEligibility: productEligibility,
         };
       })
     );
@@ -107,32 +109,48 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "No valid products found in cart" }, { status: 400 });
     }
 
-    // ✅ Reject COD orders that contain COD-disabled products (server-side enforcement)
-    if (paymentMethod === "COD" && blockedCodProducts.length > 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Cash on Delivery is not available for: ${blockedCodProducts.join(", ")}. Please choose online payment.`,
-        },
-        { status: 400 }
-      );
-    }
-
     // ✅ COD split payment: 15% is paid ONLINE upfront, the remaining 85% is
     //    collected in cash on delivery. No surcharge — the order total is unchanged.
     //    All amounts are normalized to paise precision.
-    totalAmount = Math.round(totalAmount * 100) / 100;
-    const COD_ADVANCE_PERCENT = 15;
+    const subtotalAmount = Math.round(totalAmount * 100) / 100;
+    const couponRef = doc(db, "coupons", "active");
+    const couponSnap = await getDoc(couponRef);
+    const couponData = couponSnap.exists() ? couponSnap.data() : null;
+    const couponDiscountPercent = Number(couponData?.discount) || 0;
+    const couponIsActive =
+      couponDiscountPercent > 0 &&
+      couponDiscountPercent <= 100 &&
+      (!couponData?.expiresAt || Number(couponData.expiresAt) > Date.now());
+    const couponDiscountAmount = couponIsActive
+      ? Math.round(subtotalAmount * couponDiscountPercent) / 100
+      : 0;
+    const shippingCharges = 0;
+    const taxAmount = 0;
+    totalAmount = Math.round((subtotalAmount - couponDiscountAmount + shippingCharges + taxAmount) * 100) / 100;
+    const paymentRules = resolveCartPaymentRules(filteredCartItems, totalAmount);
+    if (!paymentRules.allowedMethods.includes(paymentMethod)) {
+      return NextResponse.json({ success: false, error: `This cart does not allow ${paymentMethod}. Available methods: ${paymentRules.allowedMethods.join(", ")}.` }, { status: 400 });
+    }
+    const fullCodAllowed = paymentRules.allowedMethods.includes("FULL_COD");
     const codAdvanceAmount =
-      paymentMethod === "COD" ? Math.round((totalAmount * COD_ADVANCE_PERCENT) / 100) : 0;
+      paymentMethod === "COD" ? roundCurrency((totalAmount * COD_ADVANCE_PERCENT) / 100) : 0;
     const codDueAmount =
-      paymentMethod === "COD" ? Math.round((totalAmount - codAdvanceAmount) * 100) / 100 : 0;
+      paymentMethod === "COD" ? roundCurrency(totalAmount - codAdvanceAmount) : paymentMethod === "FULL_COD" ? totalAmount : 0;
+    const paymentRestriction = paymentRules.restriction;
 
     // ✅ Create New Order in Firestore (Before Shiprocket API Call)
     const newOrder = {
       userId,
       items: filteredCartItems,
       totalAmount,
+      subtotalAmount,
+      couponDiscountAmount,
+      couponCode: couponIsActive ? couponData?.code || null : null,
+      shippingCharges,
+      taxAmount,
+      fullCodAllowed,
+      paymentRestriction,
+      allowedPaymentMethods: paymentRules.allowedMethods,
       paymentMethod,
       codAdvanceAmount,
       codDueAmount,
@@ -272,7 +290,19 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    await updateDoc(orderRef, { status: status });
+    const orderData = orderSnap.data();
+    const allowedStatuses = ["Payment Failed", "COD Advance Paid - Ready to Ship", "Payment Verified - Ready to Ship!", "Full COD Confirmed - Ready to Ship"];
+    if (!allowedStatuses.includes(status)) {
+      return NextResponse.json({ success: false, error: "Invalid order status update" }, { status: 400 });
+    }
+    if (status !== "Payment Failed" && orderData?.paymentMethod !== "FULL_COD" && !orderData?.paymentVerified) {
+      return NextResponse.json({ success: false, error: "Payment must be verified before confirming an order" }, { status: 409 });
+    }
+    if (status === "Payment Failed" && orderData?.paymentVerified) {
+      return NextResponse.json({ success: false, error: "A verified payment cannot be marked failed" }, { status: 409 });
+    }
+
+    await updateDoc(orderRef, { status });
 
     return NextResponse.json(
       { success: true, message: "Order status updated to shipping" },

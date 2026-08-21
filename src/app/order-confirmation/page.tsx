@@ -73,8 +73,6 @@ function OrderConfirmationContent() {
 
                 const { success: paymentSuccess } = res.data;
                 if (paymentSuccess) {
-                    setSuccess(true);
-                    
                     const shipId = await createShiprocketOrder(userId, isCod ? "COD" : "ONLINE", orderId);
                     setShipRocketId(shipId);
 
@@ -89,6 +87,8 @@ function OrderConfirmationContent() {
                         console.warn("Failed to update order status:", statusError);
                         // Don't fail the whole process if status update fails
                     }
+                    // Confirmation is shown only after payment verification and shipment creation.
+                    setSuccess(true);
                 } else {
                     // Update order status for failed payment
                     try {

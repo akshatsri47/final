@@ -8,8 +8,6 @@ Sitemap: https://www.krishdoctor.in/sitemap.xml
 Disallow: /api/
 Disallow: /admin/
 Disallow: /private/
-Disallow: /_next/
-Disallow: /static/
 
 # Allow important pages
 Allow: /product/
@@ -17,6 +15,8 @@ Allow: /about/
 Allow: /contact/
 Allow: /cart/
 Allow: /order/
+Allow: /blogs
+Allow: /blogs/
 
 # Crawl delay (optional)
 Crawl-delay: 1

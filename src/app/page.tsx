@@ -15,7 +15,7 @@ import { generateLocalBusinessStructuredData, generateFAQStructuredData } from "
 export const dynamic = "force-dynamic"; // Forces SSR
 
 export const metadata: Metadata = {
-  title: "Agricultural Solutions & Products",
+  title: "Krashi Doctor | Agricultural Solutions & Products",
   description: "Discover high-quality agricultural products including herbicides, pesticides, fertilizers, and crop protection solutions. Expert advice and reliable products for modern farming.",
   keywords: [
     "agricultural products",

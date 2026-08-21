@@ -29,6 +29,12 @@ export async function POST(req: Request) {
     if (orderData.userId !== userId) {
       return NextResponse.json({ success: false, error: "Not authorized to pay for this order" }, { status: 403 });
     }
+    if (orderData.paymentMethod === "FULL_COD") {
+      return NextResponse.json({ success: false, error: "Full COD orders do not require an online payment." }, { status: 400 });
+    }
+    if (orderData.paymentVerified) {
+      return NextResponse.json({ success: false, error: "This order has already been paid." }, { status: 409 });
+    }
 
     // COD → 15% advance stored on the order; ONLINE → full order total.
     // The charged amount is ALWAYS derived server-side — never trusted from the client.

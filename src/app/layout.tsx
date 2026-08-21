@@ -12,7 +12,7 @@ import GoogleTranslateScript from "@/components/GoogleTranslateScript";
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.krishdoctor.in'),
   title: {
-    default: 'KrishDoctor - Agricultural Solutions & Products',
+    default: 'Krashi Doctor | Gupta Trading Company',
     template: '%s | KrishDoctor - Agricultural Solutions'
   },
   description: 'Leading agricultural solutions provider offering high-quality products for farmers. Shop herbicides, pesticides, fertilizers and more.',
@@ -76,9 +76,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/logo.jpg" type="image/jpeg" />
-        <link rel="shortcut icon" href="/logo.jpg" type="image/jpeg" />
-        <link rel="apple-touch-icon" href="/logo.jpg" />
+        <link rel="icon" href="/brand-logo.png?v=2" type="image/png" />
+        <link rel="shortcut icon" href="/brand-logo.png?v=2" type="image/png" />
+        <link rel="apple-touch-icon" href="/brand-logo.png?v=2" />
         <meta name="theme-color" content="#4f8e42" />
         <meta name="msapplication-TileColor" content="#4f8e42" />
         <link rel="manifest" href="/manifest.json" />

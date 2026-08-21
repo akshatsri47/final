@@ -34,6 +34,7 @@
       benefits: string[];  
       discount?:number
       codAvailable?: boolean;  // false = online payment only (COD disabled). Missing = COD allowed.
+      paymentEligibility?: "FULL_COD_ALLOWED" | "PARTIAL_COD_ONLY" | "PREPAID_ONLY" | "FULL_COD_AND_PREPAID" | "PARTIAL_COD_AND_PREPAID";
           // List of product benefits
     }
  
@@ -74,7 +75,8 @@
       quantity: number;
       price: number;
       addedAt: string | number | Date;
-      codAvailable?: boolean;  // snapshot from product; false = COD not allowed for this item
+    codAvailable?: boolean;  // snapshot from product; false = COD not allowed for this item
+    paymentEligibility?: "FULL_COD_ALLOWED" | "PARTIAL_COD_ONLY" | "PREPAID_ONLY" | "FULL_COD_AND_PREPAID" | "PARTIAL_COD_AND_PREPAID";
     }
     
   
@@ -85,12 +87,17 @@
     totalAmount: number;// Total price of the order (no COD surcharge)
     status: "pending" | "processing" | "shipped" | "delivered"; // Order status
     shiprocketTrackingId?: string;
-    paymentMethod?: "ONLINE" | "COD"; // How the customer chose to pay
+    paymentMethod?: "ONLINE" | "COD" | "FULL_COD"; // How the customer chose to pay
     codAdvanceAmount?: number; // COD: 15% advance paid online at checkout — 0 for full online payments
     codDueAmount?: number;     // COD: remaining 85% collected in cash on delivery — 0 for full online payments
     codFee?: number;      // LEGACY: COD surcharge stored on historical orders (no longer charged)
     paymentVerified?: boolean; // true once PhonePe payment (full online amount or COD advance) is verified server-side
     paidAmount?: number;  // amount actually paid online, in rupees (from the PhonePe status check)
+    fullCodAllowed?: boolean; // final order value is at or below ₹500
+    cancelledAt?: string;
+    refundId?: string;
+    refundState?: string;
+    paymentRestriction?: "FULL_COD_ALLOWED" | "PARTIAL_COD_ONLY" | "PREPAID_ONLY" | "FULL_COD_AND_PREPAID" | "PARTIAL_COD_AND_PREPAID";
     createdAt: string;  // Timestamp of order creation
   }
   

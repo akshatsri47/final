@@ -1,42 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getBlogs } from '../../lib/blogFirestore';
 import { BlogData } from '../../types/blog';
 import { Calendar, User, Tag, Eye } from 'lucide-react';
 import { convertToDate } from '../../types/firebase';
 
-export default function BlogsClient() {
-  const [blogs, setBlogs] = useState<BlogData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [categories, setCategories] = useState<string[]>([]);
+interface BlogsClientProps { initialBlogs?: BlogData[]; categories?: string[]; selectedCategory?: string; currentPage?: number; totalPages?: number; }
 
-  const fetchBlogs = useCallback(async () => {
-    try {
-      setLoading(true);
-      const filters = selectedCategory ? { category: selectedCategory } : {};
-      const result = await getBlogs(filters, 20);
-      setBlogs(result.blogs);
-      
-      // Extract unique categories
-      const allCategories = result.blogs.flatMap(blog => blog.categories);
-      const uniqueCategories = Array.from(new Set(allCategories));
-      setCategories(uniqueCategories);
-    } catch (err) {
-      setError('Failed to load blogs');
-      console.error('Error fetching blogs:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedCategory]);
-
-  useEffect(() => {
-    fetchBlogs();
-  }, [fetchBlogs]);
+export default function BlogsClient({ initialBlogs: blogs = [], categories = [], selectedCategory = '', currentPage = 1, totalPages = 1 }: BlogsClientProps) {
 
   const formatDate = (timestamp: unknown) => {
     if (!timestamp) return '';
@@ -59,37 +31,6 @@ export default function BlogsClient() {
     return html.replace(/<[^>]*>/g, '');
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading blogs...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <p className="text-red-600">{error}</p>
-            <button 
-              onClick={fetchBlogs}
-              className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
-            >
-              Try Again
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -105,8 +46,7 @@ export default function BlogsClient() {
         {categories.length > 0 && (
           <div className="mb-8">
             <div className="flex flex-wrap gap-2 justify-center">
-              <button
-                onClick={() => setSelectedCategory('')}
+              <Link href="/blogs"
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                   selectedCategory === '' 
                     ? 'bg-emerald-600 text-white' 
@@ -114,11 +54,11 @@ export default function BlogsClient() {
                 }`}
               >
                 All Categories
-              </button>
+              </Link>
               {categories.map((category) => (
-                <button
+                <Link
                   key={category}
-                  onClick={() => setSelectedCategory(category)}
+                  href={`/blogs?category=${encodeURIComponent(category)}`}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                     selectedCategory === category 
                       ? 'bg-emerald-600 text-white' 
@@ -126,11 +66,14 @@ export default function BlogsClient() {
                   }`}
                 >
                   {category}
-                </button>
+                </Link>
               ))}
             </div>
           </div>
         )}
+        {totalPages > 1 && <nav aria-label="Blog pagination" className="mt-10 flex justify-center gap-2">
+          {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => <Link key={page} href={`/blogs?${selectedCategory ? `category=${encodeURIComponent(selectedCategory)}&` : ''}page=${page}`} className={`rounded px-4 py-2 ${page === currentPage ? 'bg-emerald-600 text-white' : 'bg-white text-gray-700'}`}>{page}</Link>)}
+        </nav>}
 
         {/* Blog Grid */}
         {blogs.length === 0 ? (

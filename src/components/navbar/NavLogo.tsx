@@ -1,15 +1,23 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function NavLogo() {
   return (
     <div className="flex-shrink-0">
       <Link 
         href="/" 
-        className="text-2xl font-bold text-white flex items-center tracking-tight hover:scale-105 transition-transform"
+        className="flex items-center transition-transform hover:scale-105"
+        aria-label="Krashi Doctor home"
       >
-        <span className="mr-1">Krashi</span>
-        <span className="bg-white/10 px-2 py-1 rounded">DOCTOR</span>
+        <Image
+          src="/brand-logo.png"
+          alt="Krashi Doctor - Gupta Trading Company"
+          width={108}
+          height={81}
+          priority
+          className="h-14 w-auto object-contain mix-blend-multiply md:h-16"
+        />
       </Link>
     </div>
   );

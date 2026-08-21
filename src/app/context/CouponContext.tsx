@@ -5,6 +5,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 interface Coupon {
   code: string;
   discount: number;
+  expiresAt?: number | null;
 }
 
 interface CouponContextProps {
@@ -29,8 +30,12 @@ export const CouponProvider = ({ children }: { children: ReactNode }) => {
       // Check if coupon is already stored in sessionStorage
       const storedCoupon = sessionStorage.getItem('coupon');
       if (storedCoupon) {
-        setCoupon(JSON.parse(storedCoupon));
-        return;
+        const parsedCoupon = JSON.parse(storedCoupon) as Coupon;
+        if (!parsedCoupon.expiresAt || parsedCoupon.expiresAt > Date.now()) {
+          setCoupon(parsedCoupon);
+          return;
+        }
+        sessionStorage.removeItem('coupon');
       }
 
       try {
@@ -38,9 +43,11 @@ export const CouponProvider = ({ children }: { children: ReactNode }) => {
         if (!res.ok) throw new Error(`API responded with status: ${res.status}`);
 
         const data = await res.json();
-        if (data && typeof data.discount === 'number' && data.discount > 0) {
-          setCoupon({ code: data.code, discount: data.discount });
-          sessionStorage.setItem('coupon', JSON.stringify({ code: data.code, discount: data.discount }));
+        const couponIsActive = !data.expiresAt || data.expiresAt > Date.now();
+        if (data && typeof data.discount === 'number' && data.discount > 0 && couponIsActive) {
+          const activeCoupon = { code: data.code, discount: data.discount, expiresAt: data.expiresAt ?? null };
+          setCoupon(activeCoupon);
+          sessionStorage.setItem('coupon', JSON.stringify(activeCoupon));
         } else {
           setCoupon(null);
         }

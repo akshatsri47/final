@@ -9,7 +9,7 @@ import { useUserId } from "../hooks/useId";
 import { Address } from "../../../types/types";
 
 import { AddressCard } from "../../components/Addresscard";
-import { CartSummary, calculateCartTotal } from "../../components/Cartsummary";
+import { CartSummary, calculateCheckoutTotals } from "../../components/Cartsummary";
 
 import {
   PaymentMethodSelector,
@@ -17,7 +17,11 @@ import {
 } from "../../components/Payementmethod";
 import {
   createPhonePeOrder,
+  createShiprocketOrder,
+  updateOrderStatus,
 } from "../../components/Orderservice";
+import { useCoupon } from "../context/CouponContext";
+import { COD_ADVANCE_PERCENT, resolveCartPaymentRules, roundCurrency } from "../../lib/paymentEligibility";
 
 
 
@@ -31,17 +35,10 @@ export default function ConfirmOrderPage() {
   const router = useRouter();
   const userId = useUserId();
   const { cart, loading, error } = useCart(userId);
+  const { coupon } = useCoupon();
   const [address, setAddress] = useState<Address | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("ONLINE");
   const [isProcessing, setIsProcessing] = useState(false);
-  const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
-
-  if (!razorpayKey) {
-    throw new Error(
-      "Razorpay key is missing. Please set NEXT_PUBLIC_RAZORPAY_KEY_ID in environment variables."
-    );
-  }
-
   // Fetch user address from backend
   useEffect(() => {
     const fetchAddress = async () => {
@@ -63,21 +60,17 @@ export default function ConfirmOrderPage() {
     fetchAddress();
   }, [userId, router]);
 
-  // COD is allowed only when EVERY item in the cart allows it
-  const codAllowed = cart.every((item) => item.codAvailable !== false);
-
-  // If COD is not allowed for this cart, force online payment
+  const { total: totalOrderValue } = calculateCheckoutTotals(cart, coupon?.discount || 0);
+  const paymentRules = resolveCartPaymentRules(cart, totalOrderValue);
   useEffect(() => {
-    if (!codAllowed && paymentMethod === "COD") {
-      setPaymentMethod("ONLINE");
+    if (!paymentRules.allowedMethods.includes(paymentMethod)) {
+      setPaymentMethod(paymentRules.allowedMethods[0]);
     }
-  }, [codAllowed, paymentMethod]);
+  }, [paymentRules.allowedMethods, paymentMethod]);
 
   // Totals: no COD surcharge — 15% is paid online now, the remaining 85% on delivery
-  const COD_ADVANCE_PERCENT = 15;
-  const subtotal = calculateCartTotal(cart);
   const codAdvanceAmount =
-    paymentMethod === "COD" ? Math.round((subtotal * COD_ADVANCE_PERCENT) / 100) : 0;
+    paymentMethod === "COD" ? roundCurrency((totalOrderValue * COD_ADVANCE_PERCENT) / 100) : 0;
 
   // Handle COD order
   const handleCODOrder = async () => {
@@ -87,8 +80,8 @@ export default function ConfirmOrderPage() {
     }
 
     // Safety guard — COD is not allowed when the cart contains COD-disabled products
-    if (!codAllowed) {
-      alert("Cash on Delivery is not available for some items in your cart. Please use online payment.");
+    if (!paymentRules.allowedMethods.includes("COD")) {
+      alert("Partial COD is not available for this cart.");
       return;
     }
 
@@ -123,6 +116,22 @@ export default function ConfirmOrderPage() {
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleFullCODOrder = async () => {
+    if (!userId || !address || !paymentRules.allowedMethods.includes("FULL_COD")) return;
+    setIsProcessing(true);
+    try {
+      const orderResponse = await api.post('/order', { userId, paymentMethod: "FULL_COD" });
+      if (!orderResponse.data.success) throw new Error(orderResponse.data.error || 'Failed to create order');
+      const orderId = orderResponse.data.data.id;
+      await createShiprocketOrder(userId, "FULL_COD", orderId);
+      await updateOrderStatus(orderId, "Full COD Confirmed - Ready to Ship", userId);
+      router.push(`/orders/${orderId}`);
+    } catch (error) {
+      const message = (error as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      alert(message || (error instanceof Error ? error.message : "Failed to place order"));
+    } finally { setIsProcessing(false); }
   };
 
   // Handle Online Payment
@@ -191,6 +200,8 @@ export default function ConfirmOrderPage() {
   const handlePlaceOrder = () => {
     if (paymentMethod === "COD") {
       handleCODOrder();
+    } else if (paymentMethod === "FULL_COD") {
+      handleFullCODOrder();
     } else {
       handleOnlinePayment();
     }
@@ -212,40 +223,44 @@ export default function ConfirmOrderPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-indigo-50 to-white py-12">
+    <div className="min-h-screen bg-gray-50 px-4 py-6 sm:py-10">
 
 
-      <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-lg p-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-8">
+      <div className="mx-auto max-w-7xl">
+        <h1 className="mb-7 text-center text-3xl font-bold text-gray-800 md:text-4xl">
           Confirm Your Order
         </h1>
 
         {/* Three-column layout for Address, Payment, and Cart Summary */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
           {/* Left Column: Address */}
-          <div>
+          <div className="order-3 lg:order-1">
             <AddressCard address={address} />
           </div>
 
           {/* Middle Column: Payment Method */}
-          <div>
+          <div className="order-1 lg:order-2">
             <PaymentMethodSelector
               selectedMethod={paymentMethod}
               onMethodChange={setPaymentMethod}
-              codDisabled={!codAllowed}
+              allowedMethods={paymentRules.allowedMethods}
             />
           </div>
 
           {/* Right Column: Cart Summary */}
-          <div>
-            <CartSummary cart={cart} paymentMethod={paymentMethod} />
+          <div className="order-2 lg:order-3">
+            <CartSummary
+              cart={cart}
+              paymentMethod={paymentMethod}
+              couponDiscountPercent={coupon?.discount || 0}
+            />
           </div>
         </div>
 
         {/* Notice when COD is blocked by a cart item */}
-        {!codAllowed && (
+        {paymentRules.restriction === "PREPAID_ONLY" && (
           <p className="mt-6 text-sm text-red-600 font-medium text-center">
-            ⚠️ Cash on Delivery is not available for some items in your cart. Please pay online.
+            Cash on Delivery is not available for this cart. Please pay online.
           </p>
         )}
 
@@ -259,7 +274,7 @@ export default function ConfirmOrderPage() {
           >
             {isProcessing
               ? "⏳ Processing..."
-              : `✅ Place Order ${paymentMethod === "COD" ? `(COD · Pay ₹${codAdvanceAmount} now)` : ""}`}
+              : `Place Order ${paymentMethod === "COD" ? `(Pay ₹${codAdvanceAmount} now)` : ""}`}
           </button>
         </div>
       </div>

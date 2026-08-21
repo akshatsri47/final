@@ -45,6 +45,9 @@ export async function GET(req: NextRequest) {
         { status: 403 }
       );
     }
+    if (orderData.paymentMethod === "FULL_COD") {
+      return NextResponse.json({ success: false, msg: "Full COD orders have no advance payment to verify" }, { status: 400 });
+    }
 
     const res = await axios.post(`${process.env.NEXT_PUBLIC_BASE_URL}/api/phone-pe/check-status`, {
       merchantOrderId,

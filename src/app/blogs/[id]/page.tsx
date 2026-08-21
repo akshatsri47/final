@@ -3,6 +3,9 @@ import { getBlogById } from '../../../lib/blogFirestore';
 import BlogDetailClient from './BlogDetailClient';
 import StructuredDataComponent from '../../../components/StructuredData';
 import { generateArticleStructuredData } from '../../../lib/seo';
+import { notFound } from 'next/navigation';
+import { BlogData } from '../../../types/blog';
+import { convertToDate } from '../../../types/firebase';
 
 type Props = {
   params: Promise<{ id: string }>
@@ -18,6 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       return {
         title: 'Blog Not Found',
         description: 'The requested blog post could not be found.',
+        robots: { index: false, follow: false },
       };
     }
 
@@ -78,8 +82,15 @@ export default async function BlogDetailPage({ params }: Props) {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.krishdoctor.in';
   
   if (!blog) {
-    return <BlogDetailClient blogId={blogId} />;
+    notFound();
   }
+
+  const serializedBlog: BlogData = {
+    ...blog,
+    publishDate: convertToDate(blog.publishDate).toISOString() as unknown as BlogData['publishDate'],
+    createdAt: convertToDate(blog.createdAt).toISOString() as unknown as BlogData['createdAt'],
+    updatedAt: convertToDate(blog.updatedAt).toISOString() as unknown as BlogData['updatedAt'],
+  };
 
   const articleData = generateArticleStructuredData({
     title: blog.seo?.metaTitle || blog.title,
@@ -94,7 +105,7 @@ export default async function BlogDetailPage({ params }: Props) {
   return (
     <>
       <StructuredDataComponent data={articleData} />
-      <BlogDetailClient blogId={blogId} />
+      <BlogDetailClient blogId={blogId} initialBlog={serializedBlog} />
     </>
   );
 }

@@ -11,6 +11,7 @@ import api from "../utils/api";
   packageSize: string; // Selected package size
   addedAt: string;   // Timestamp when added to cart
   codAvailable?: boolean; // false = COD not allowed for this product
+  paymentEligibility?: "FULL_COD_ALLOWED" | "PARTIAL_COD_ONLY" | "PREPAID_ONLY" | "FULL_COD_AND_PREPAID" | "PARTIAL_COD_AND_PREPAID";
 }
 
 export const useCart = (userId: string) => {
