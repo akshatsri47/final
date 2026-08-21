@@ -77,9 +77,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/favicon.png?v=3" type="image/png" sizes="any" />
-        <link rel="shortcut icon" href="/favicon.png?v=3" type="image/png" />
-        <link rel="apple-touch-icon" href="/favicon.png?v=3" />
+        <link rel="icon" href="/favicon.png" type="image/png" sizes="any" />
+        <link rel="shortcut icon" href="/favicon.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/favicon.png" />
         <meta name="theme-color" content="#4f8e42" />
         <meta name="msapplication-TileColor" content="#4f8e42" />
         <link rel="manifest" href="/manifest.json" />
