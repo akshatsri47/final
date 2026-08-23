@@ -3,14 +3,14 @@
 import React from "react";
 import { v4 as uuidv4 } from "uuid";
 import { CartItem } from "../../types/types";
-import { COD_ADVANCE_PERCENT, PaymentMethod, roundCurrency } from "../lib/paymentEligibility";
+import { COD_ADVANCE_PERCENT, FULL_PREPAID_DISCOUNT_PERCENT, PaymentMethod, roundCurrency } from "../lib/paymentEligibility";
 interface CartSummaryProps {
   cart: CartItem[];
   paymentMethod?: PaymentMethod;
   couponDiscountPercent?: number;
 }
 
-export const calculateCheckoutTotals = (cart: CartItem[], couponDiscountPercent = 0) => {
+export const calculateCheckoutTotals = (cart: CartItem[], couponDiscountPercent = 0, paymentMethod?: PaymentMethod) => {
   // Shipping and tax are currently included as zero-value order charges. Keep the
   // calculation explicit so the final order value remains the payment source of truth.
   const shippingCost = 0;
@@ -18,13 +18,17 @@ export const calculateCheckoutTotals = (cart: CartItem[], couponDiscountPercent 
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const safeCouponDiscountPercent = Math.min(Math.max(couponDiscountPercent, 0), 100);
   const couponDiscount = Math.round((subtotal * safeCouponDiscountPercent)) / 100;
-  const total = Math.round((subtotal - couponDiscount + shippingCost + taxAmount) * 100) / 100;
+  const totalBeforePaymentDiscount = roundCurrency(subtotal - couponDiscount + shippingCost + taxAmount);
+  const onlinePaymentDiscount = paymentMethod === "ONLINE"
+    ? roundCurrency((totalBeforePaymentDiscount * FULL_PREPAID_DISCOUNT_PERCENT) / 100)
+    : 0;
+  const total = roundCurrency(totalBeforePaymentDiscount - onlinePaymentDiscount);
 
-  return { subtotal, shippingCost, taxAmount, couponDiscount, total };
+  return { subtotal, shippingCost, taxAmount, couponDiscount, onlinePaymentDiscount, totalBeforePaymentDiscount, total };
 };
 
 export const CartSummary: React.FC<CartSummaryProps> = ({ cart, paymentMethod, couponDiscountPercent = 0 }) => {
-  const { subtotal, shippingCost, taxAmount, couponDiscount, total } = calculateCheckoutTotals(cart, couponDiscountPercent);
+  const { subtotal, shippingCost, taxAmount, couponDiscount, onlinePaymentDiscount, total } = calculateCheckoutTotals(cart, couponDiscountPercent, paymentMethod);
   // COD: 15% is paid online now, the remaining 85% is collected on delivery (no surcharge)
   const codAdvance = paymentMethod === "COD" ? roundCurrency((total * COD_ADVANCE_PERCENT) / 100) : 0;
   const codDue = roundCurrency(total - codAdvance);
@@ -74,6 +78,12 @@ export const CartSummary: React.FC<CartSummaryProps> = ({ cart, paymentMethod, c
           <div className="flex justify-between text-sm mb-2">
             <span className="text-gray-600">Coupon discount</span>
             <span className="text-green-700">−₹{couponDiscount}</span>
+          </div>
+        )}
+        {onlinePaymentDiscount > 0 && (
+          <div className="mb-2 flex justify-between text-sm">
+            <span className="text-gray-600">Full prepaid discount ({FULL_PREPAID_DISCOUNT_PERCENT}%)</span>
+            <span className="font-medium text-green-700">−₹{onlinePaymentDiscount}</span>
           </div>
         )}
         <div className="flex justify-between text-sm mb-2">

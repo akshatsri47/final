@@ -12,6 +12,8 @@ interface Order {
   paymentMethod?: "ONLINE" | "COD" | "FULL_COD";
   codAdvanceAmount?: number; // COD: 15% paid online at checkout
   codDueAmount?: number;     // COD: 85% due on delivery
+  onlinePaymentDiscountPercent?: number;
+  onlinePaymentDiscountAmount?: number;
   cancelledAt?: string;
 }
 
@@ -76,6 +78,9 @@ export default function OrderDetailsPage() {
         <h1 className="text-3xl font-bold text-gray-800 mb-4">Order Details</h1>
         <p className="text-gray-600">Order ID: {order?.id}</p>
         <p className="text-gray-600">Total Amount: <span className="font-bold">₹{order?.totalAmount}</span></p>
+        {(order?.onlinePaymentDiscountAmount ?? 0) > 0 && (
+          <p className="text-green-700">Full prepaid discount ({order?.onlinePaymentDiscountPercent}%): <span className="font-bold">−₹{order?.onlinePaymentDiscountAmount}</span></p>
+        )}
         {(order?.paymentMethod === "COD" || order?.paymentMethod === "FULL_COD") && (order?.codDueAmount ?? 0) > 0 && (
           <p className="text-gray-600">
             Paid online: <span className="font-bold text-green-700">₹{order?.codAdvanceAmount}</span>

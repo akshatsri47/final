@@ -12,7 +12,7 @@ import {
 } from "firebase/firestore";
 import { Order } from "../../../../types/types";
 import { cookies } from "next/headers";
-import { COD_ADVANCE_PERCENT, PaymentMethod, resolveCartPaymentRules, roundCurrency } from "@/lib/paymentEligibility";
+import { COD_ADVANCE_PERCENT, FULL_PREPAID_DISCOUNT_PERCENT, PaymentMethod, resolveCartPaymentRules, roundCurrency } from "@/lib/paymentEligibility";
 
 
 
@@ -126,11 +126,16 @@ export async function POST(req: NextRequest) {
       : 0;
     const shippingCharges = 0;
     const taxAmount = 0;
-    totalAmount = Math.round((subtotalAmount - couponDiscountAmount + shippingCharges + taxAmount) * 100) / 100;
-    const paymentRules = resolveCartPaymentRules(filteredCartItems, totalAmount);
+    const totalBeforePaymentDiscount = roundCurrency(subtotalAmount - couponDiscountAmount + shippingCharges + taxAmount);
+    const paymentRules = resolveCartPaymentRules(filteredCartItems, totalBeforePaymentDiscount);
     if (!paymentRules.allowedMethods.includes(paymentMethod)) {
       return NextResponse.json({ success: false, error: `This cart does not allow ${paymentMethod}. Available methods: ${paymentRules.allowedMethods.join(", ")}.` }, { status: 400 });
     }
+    const onlinePaymentDiscountPercent = paymentMethod === "ONLINE" ? FULL_PREPAID_DISCOUNT_PERCENT : 0;
+    const onlinePaymentDiscountAmount = paymentMethod === "ONLINE"
+      ? roundCurrency((totalBeforePaymentDiscount * onlinePaymentDiscountPercent) / 100)
+      : 0;
+    totalAmount = roundCurrency(totalBeforePaymentDiscount - onlinePaymentDiscountAmount);
     const fullCodAllowed = paymentRules.allowedMethods.includes("FULL_COD");
     const codAdvanceAmount =
       paymentMethod === "COD" ? roundCurrency((totalAmount * COD_ADVANCE_PERCENT) / 100) : 0;
@@ -146,6 +151,9 @@ export async function POST(req: NextRequest) {
       subtotalAmount,
       couponDiscountAmount,
       couponCode: couponIsActive ? couponData?.code || null : null,
+      totalBeforePaymentDiscount,
+      onlinePaymentDiscountPercent,
+      onlinePaymentDiscountAmount,
       shippingCharges,
       taxAmount,
       fullCodAllowed,

@@ -1,5 +1,6 @@
 export const COD_ADVANCE_PERCENT = 15;
 export const FULL_COD_MAX_ORDER_VALUE = 500;
+export const FULL_PREPAID_DISCOUNT_PERCENT = 3;
 
 export type PaymentMethod = "ONLINE" | "COD" | "FULL_COD";
 export type ProductPaymentEligibility =

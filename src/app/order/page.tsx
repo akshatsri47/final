@@ -21,7 +21,7 @@ import {
   updateOrderStatus,
 } from "../../components/Orderservice";
 import { useCoupon } from "../context/CouponContext";
-import { COD_ADVANCE_PERCENT, resolveCartPaymentRules, roundCurrency } from "../../lib/paymentEligibility";
+import { COD_ADVANCE_PERCENT, FULL_PREPAID_DISCOUNT_PERCENT, resolveCartPaymentRules, roundCurrency } from "../../lib/paymentEligibility";
 
 
 
@@ -244,6 +244,7 @@ export default function ConfirmOrderPage() {
               selectedMethod={paymentMethod}
               onMethodChange={setPaymentMethod}
               allowedMethods={paymentRules.allowedMethods}
+              onlineDiscountPercent={FULL_PREPAID_DISCOUNT_PERCENT}
             />
           </div>
 
