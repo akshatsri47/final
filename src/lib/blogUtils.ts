@@ -33,12 +33,7 @@ export const getBlogImageUrl = (blog: BlogData): string => {
     return blog.featuredImage.url.trim();
   }
 
-  const galleryImage = blog.mediaItems
-    ?.filter((media) => media.type === 'image')
-    .sort((a, b) => a.position - b.position)
-    .find((media) => isUsableBlogImageUrl(media.url));
-
-  return galleryImage?.url.trim() || extractFirstBlogImage(blog.content) || DEFAULT_BLOG_IMAGE;
+  return DEFAULT_BLOG_IMAGE;
 };
 
 /**
@@ -56,15 +51,10 @@ export const sanitizeBlogContent = (content = ''): string => {
     .replace(/<title\b[^>]*>[\s\S]*?<\/title>/gi, '')
     .replace(/<\/?(?:html|body)\b[^>]*>/gi, '')
     .replace(/<p\b[^>]*>\s*Replace the image URL[\s\S]*?<\/p>/gi, '')
+    .replace(/<img\b[^>]*>/gi, '')
+    .replace(/Replace the image URL with the one you uploaded in your website\/media library\.?/gi, '')
     .replace(/\s+on[a-z]+\s*=\s*(["']).*?\1/gi, '')
     .replace(/\s+(href|src)\s*=\s*(["'])\s*javascript:[\s\S]*?\2/gi, '');
-
-  sanitized = sanitized.replace(/<img\b[^>]*>/gi, (tag) => {
-    const sourceMatch = tag.match(/\bsrc\s*=\s*(["'])([^"']+)\1/i);
-    if (!sourceMatch || isUsableBlogImageUrl(sourceMatch[2])) return tag;
-
-    return tag.replace(sourceMatch[0], `src="${DEFAULT_BLOG_IMAGE}"`);
-  });
 
   return sanitized.trim();
 };
