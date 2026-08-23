@@ -12,7 +12,7 @@ import {
 } from "firebase/firestore";
 import { Order } from "../../../../types/types";
 import { cookies } from "next/headers";
-import { COD_ADVANCE_PERCENT, FULL_PREPAID_DISCOUNT_PERCENT, PaymentMethod, resolveCartPaymentRules, roundCurrency } from "@/lib/paymentEligibility";
+import { COD_ADVANCE_PERCENT, FULL_PREPAID_DISCOUNT_PERCENT, PaymentMethod, normalizePaymentEligibility, resolveCartPaymentRules, roundCurrency } from "@/lib/paymentEligibility";
 
 
 
@@ -77,7 +77,14 @@ export async function POST(req: NextRequest) {
 
         const productData = productSnap.data();
 
-        const productEligibility = productData?.paymentEligibility;
+        // Legacy products predate the paymentEligibility field. Firestore rejects
+        // `undefined` values, so always persist the same normalized value used by
+        // checkout validation instead of copying an absent field into the order.
+        const codAvailable = productData?.codAvailable !== false;
+        const productEligibility = normalizePaymentEligibility(
+          productData?.paymentEligibility,
+          codAvailable,
+        );
 
         // Prefer the cart's stored selling price (respects package size & discount);
         // fall back to the first pricing tier for legacy cart items without a price
@@ -96,7 +103,7 @@ export async function POST(req: NextRequest) {
           packageSize: item.packageSize || "",
           quantity: item.quantity,
           price,
-          codAvailable: productData?.codAvailable !== false,
+          codAvailable,
           paymentEligibility: productEligibility,
         };
       })
