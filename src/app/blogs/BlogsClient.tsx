@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { BlogData } from '../../types/blog';
 import { Calendar, User, Tag, Eye } from 'lucide-react';
 import { convertToDate } from '../../types/firebase';
+import { getBlogImageUrl } from '../../lib/blogUtils';
 
 interface BlogsClientProps { initialBlogs?: BlogData[]; categories?: string[]; selectedCategory?: string; currentPage?: number; totalPages?: number; }
 
@@ -85,16 +86,15 @@ export default function BlogsClient({ initialBlogs: blogs = [], categories = [],
             {blogs.map((blog) => (
               <article key={blog.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                 {/* Featured Image */}
-                {blog.featuredImage && (
-                  <div className="relative h-48 w-full">
-                    <Image
-                      src={blog.featuredImage.url}
-                      alt={blog.featuredImage.altText || blog.title}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                )}
+                <Link href={`/blogs/${blog.id}`} className="relative block h-48 w-full">
+                  <Image
+                    src={getBlogImageUrl(blog)}
+                    alt={blog.featuredImage?.altText || blog.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover"
+                  />
+                </Link>
 
                 <div className="p-6">
                   {/* Categories */}

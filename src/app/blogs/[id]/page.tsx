@@ -6,6 +6,7 @@ import { generateArticleStructuredData } from '../../../lib/seo';
 import { notFound } from 'next/navigation';
 import { BlogData } from '../../../types/blog';
 import { convertToDate } from '../../../types/firebase';
+import { getBlogImageUrl, sanitizeBlogContent } from '../../../lib/blogUtils';
 
 type Props = {
   params: Promise<{ id: string }>
@@ -27,6 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.krishdoctor.in';
     const blogUrl = `${baseUrl}/blogs/${blogId}`;
+    const imageUrl = new URL(getBlogImageUrl(blog), baseUrl).toString();
 
     return {
       title: blog.seo?.metaTitle || blog.title,
@@ -38,17 +40,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         description: blog.seo?.metaDescription || blog.excerpt || blog.title,
         url: blogUrl,
         siteName: 'KrishDoctor',
-        images: blog.featuredImage ? [
+        images: [
           {
-            url: blog.featuredImage.url,
+            url: imageUrl,
             width: 1200,
             height: 630,
-            alt: blog.featuredImage.altText || blog.title,
+            alt: blog.featuredImage?.altText || blog.title,
           }
-        ] : [],
+        ],
         type: 'article',
-        publishedTime: blog.publishDate ? new Date(blog.publishDate.seconds * 1000).toISOString() : undefined,
-        modifiedTime: blog.updatedAt ? new Date(blog.updatedAt.seconds * 1000).toISOString() : undefined,
+        publishedTime: blog.publishDate ? convertToDate(blog.publishDate).toISOString() : undefined,
+        modifiedTime: blog.updatedAt ? convertToDate(blog.updatedAt).toISOString() : undefined,
         authors: [blog.author.name],
         tags: blog.tags,
       },
@@ -56,7 +58,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         card: 'summary_large_image',
         title: blog.seo?.metaTitle || blog.title,
         description: blog.seo?.metaDescription || blog.excerpt || blog.title,
-        images: blog.featuredImage ? [blog.featuredImage.url] : [],
+        images: [imageUrl],
       },
       alternates: {
         canonical: blogUrl,
@@ -87,6 +89,7 @@ export default async function BlogDetailPage({ params }: Props) {
 
   const serializedBlog: BlogData = {
     ...blog,
+    content: sanitizeBlogContent(blog.content),
     publishDate: convertToDate(blog.publishDate).toISOString() as unknown as BlogData['publishDate'],
     createdAt: convertToDate(blog.createdAt).toISOString() as unknown as BlogData['createdAt'],
     updatedAt: convertToDate(blog.updatedAt).toISOString() as unknown as BlogData['updatedAt'],
@@ -95,10 +98,10 @@ export default async function BlogDetailPage({ params }: Props) {
   const articleData = generateArticleStructuredData({
     title: blog.seo?.metaTitle || blog.title,
     description: blog.seo?.metaDescription || blog.excerpt || blog.title,
-    image: blog.featuredImage?.url || `${baseUrl}/banner1.jpg`,
+    image: new URL(getBlogImageUrl(blog), baseUrl).toString(),
     url: `${baseUrl}/blogs/${blogId}`,
-    datePublished: blog.publishDate ? new Date(blog.publishDate.seconds * 1000).toISOString() : new Date().toISOString(),
-    dateModified: blog.updatedAt ? new Date(blog.updatedAt.seconds * 1000).toISOString() : undefined,
+    datePublished: blog.publishDate ? convertToDate(blog.publishDate).toISOString() : new Date().toISOString(),
+    dateModified: blog.updatedAt ? convertToDate(blog.updatedAt).toISOString() : undefined,
     authorName: blog.author?.name || 'KrishDoctor Expert',
   });
 

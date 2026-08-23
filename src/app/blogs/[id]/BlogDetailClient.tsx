@@ -7,6 +7,7 @@ import { getBlogById, incrementBlogViews } from '../../../lib/blogFirestore';
 import { BlogData } from '../../../types/blog';
 import { Calendar, User, Tag, ArrowLeft, Eye } from 'lucide-react';
 import { convertToDate } from '../../../types/firebase';
+import { getBlogImageUrl, sanitizeBlogContent } from '../../../lib/blogUtils';
 
 interface BlogDetailClientProps {
   blogId: string;
@@ -34,7 +35,7 @@ export default function BlogDetailClient({ blogId, initialBlog }: BlogDetailClie
         return;
       }
 
-      setBlog(blogData);
+      setBlog({ ...blogData, content: sanitizeBlogContent(blogData.content) });
       
       // Increment view count
       try {
@@ -52,10 +53,14 @@ export default function BlogDetailClient({ blogId, initialBlog }: BlogDetailClie
   }, [blogId]);
 
   useEffect(() => {
-    if (blogId) {
+    if (blogId && !initialBlog) {
       fetchBlog();
+    } else if (blogId) {
+      incrementBlogViews(blogId).catch((viewError) => {
+        console.error('Error incrementing views:', viewError);
+      });
     }
-  }, [blogId, fetchBlog]);
+  }, [blogId, fetchBlog, initialBlog]);
 
   const formatDate = (timestamp: unknown) => {
     if (!timestamp) return '';
@@ -123,17 +128,16 @@ export default function BlogDetailClient({ blogId, initialBlog }: BlogDetailClie
         {/* Blog Content */}
         <article className="bg-white rounded-lg shadow-lg overflow-hidden">
           {/* Featured Image */}
-          {blog.featuredImage && (
-            <div className="relative h-64 md:h-96 w-full">
-              <Image
-                src={blog.featuredImage.url}
-                alt={blog.featuredImage.altText || blog.title}
-                fill
-                className="object-cover"
-                priority
-              />
-            </div>
-          )}
+          <div className="relative h-64 md:h-96 w-full">
+            <Image
+              src={getBlogImageUrl(blog)}
+              alt={blog.featuredImage?.altText || blog.title}
+              fill
+              sizes="(max-width: 768px) 100vw, 896px"
+              className="object-cover"
+              priority
+            />
+          </div>
 
           <div className="p-8">
             {/* Categories */}

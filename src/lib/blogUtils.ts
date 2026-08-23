@@ -1,5 +1,74 @@
 import { BlogData, MediaItem } from '@/types/blog';
 
+export const DEFAULT_BLOG_IMAGE = '/banner1.jpg';
+
+export const isUsableBlogImageUrl = (url?: string): url is string => {
+  if (!url?.trim()) return false;
+
+  const normalized = url.trim().toLowerCase();
+  if (
+    normalized.includes('example.com') ||
+    normalized.includes('your-uploaded-image') ||
+    normalized.includes('placeholder')
+  ) {
+    return false;
+  }
+
+  return normalized.startsWith('/') || /^https?:\/\//i.test(normalized);
+};
+
+export const extractFirstBlogImage = (content = ''): string | undefined => {
+  const imageTags = content.match(/<img\b[^>]*>/gi) || [];
+
+  for (const tag of imageTags) {
+    const source = tag.match(/\bsrc\s*=\s*["']([^"']+)["']/i)?.[1];
+    if (isUsableBlogImageUrl(source)) return source.trim();
+  }
+
+  return undefined;
+};
+
+export const getBlogImageUrl = (blog: BlogData): string => {
+  if (isUsableBlogImageUrl(blog.featuredImage?.url)) {
+    return blog.featuredImage.url.trim();
+  }
+
+  const galleryImage = blog.mediaItems
+    ?.filter((media) => media.type === 'image')
+    .sort((a, b) => a.position - b.position)
+    .find((media) => isUsableBlogImageUrl(media.url));
+
+  return galleryImage?.url.trim() || extractFirstBlogImage(blog.content) || DEFAULT_BLOG_IMAGE;
+};
+
+/**
+ * Blog bodies are rich text, not full HTML documents. Older posts can contain
+ * copied head metadata and placeholder images; remove those before rendering
+ * so they cannot create duplicate SEO signals or broken media.
+ */
+export const sanitizeBlogContent = (content = ''): string => {
+  let sanitized = content
+    .replace(/<!doctype[^>]*>/gi, '')
+    .replace(/<head\b[^>]*>[\s\S]*?<\/head>/gi, '')
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<(?:meta|base)\b[^>]*\/?\s*>/gi, '')
+    .replace(/<link\b[^>]*\/?\s*>/gi, '')
+    .replace(/<title\b[^>]*>[\s\S]*?<\/title>/gi, '')
+    .replace(/<\/?(?:html|body)\b[^>]*>/gi, '')
+    .replace(/<p\b[^>]*>\s*Replace the image URL[\s\S]*?<\/p>/gi, '')
+    .replace(/\s+on[a-z]+\s*=\s*(["']).*?\1/gi, '')
+    .replace(/\s+(href|src)\s*=\s*(["'])\s*javascript:[\s\S]*?\2/gi, '');
+
+  sanitized = sanitized.replace(/<img\b[^>]*>/gi, (tag) => {
+    const sourceMatch = tag.match(/\bsrc\s*=\s*(["'])([^"']+)\1/i);
+    if (!sourceMatch || isUsableBlogImageUrl(sourceMatch[2])) return tag;
+
+    return tag.replace(sourceMatch[0], `src="${DEFAULT_BLOG_IMAGE}"`);
+  });
+
+  return sanitized.trim();
+};
+
 // Public utility functions for the user-facing app
 
 // Generate excerpt from content
