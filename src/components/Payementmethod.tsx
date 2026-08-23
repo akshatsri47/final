@@ -24,25 +24,27 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
         Payment Method
       </h2>
       <div className="space-y-4">
-        {allowedMethods.includes('ONLINE') && <button
-          type="button"
-          aria-pressed={selectedMethod === 'ONLINE'}
-          className={`w-full rounded-xl border p-5 text-left transition-all sm:p-6 ${selectedMethod === 'ONLINE' ? 'border-indigo-500 bg-indigo-50/70 ring-1 ring-indigo-500' : 'border-gray-200 bg-white hover:border-gray-400'}`}
-          onClick={() => onMethodChange('ONLINE')}
-        >
-          <div className="flex items-center gap-4">
-            <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-[3px] ${selectedMethod === 'ONLINE' ? 'border-indigo-500' : 'border-slate-400'}`}>
-              {selectedMethod === 'ONLINE' && <div className="h-3.5 w-3.5 rounded-full bg-indigo-500" />}
-            </div>
-            <div className="text-xl font-medium text-gray-950 sm:text-2xl">Online Payment (PhonePe)</div>
-          </div>
+        {allowedMethods.includes('ONLINE') && <div className="relative">
           {onlineDiscountPercent > 0 && (
-            <div className="mx-auto mt-4 flex w-fit items-center gap-2 rounded-lg bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 sm:text-base">
-              <span aria-hidden="true">🏷</span> Additional Discount of {onlineDiscountPercent}% on total bill
+            <div className="pointer-events-none absolute left-1/2 top-0 z-10 w-max max-w-[calc(100%-1.5rem)] -translate-x-1/2 -translate-y-1/2 rounded-lg bg-emerald-500 px-4 py-2 text-center text-xs font-bold text-white shadow-md sm:text-sm">
+              Pay Online &amp; Get {onlineDiscountPercent}% OFF on Total Bill
             </div>
           )}
-          <p className="mt-4 pl-11 text-base leading-relaxed text-gray-500 sm:text-lg">Pay securely online using credit card, debit card, or UPI</p>
-        </button>}
+          <button
+            type="button"
+            aria-pressed={selectedMethod === 'ONLINE'}
+            className={`w-full rounded-xl border p-5 text-left transition-all sm:p-6 ${onlineDiscountPercent > 0 ? 'pt-8 sm:pt-9' : ''} ${selectedMethod === 'ONLINE' ? 'border-indigo-500 bg-indigo-50/70 ring-1 ring-indigo-500' : 'border-gray-200 bg-white hover:border-gray-400'}`}
+            onClick={() => onMethodChange('ONLINE')}
+          >
+            <div className="flex items-center gap-4">
+              <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-[3px] ${selectedMethod === 'ONLINE' ? 'border-indigo-500' : 'border-slate-400'}`}>
+                {selectedMethod === 'ONLINE' && <div className="h-3.5 w-3.5 rounded-full bg-indigo-500" />}
+              </div>
+              <div className="text-xl font-medium text-gray-950 sm:text-2xl">Online Payment (PhonePe)</div>
+            </div>
+            <p className="mt-4 pl-11 text-base leading-relaxed text-gray-500 sm:text-lg">Pay securely online using credit card, debit card, or UPI</p>
+          </button>
+        </div>}
 
         {allowedMethods.includes('COD') && <div className={`overflow-hidden rounded-xl border transition-all ${selectedMethod === 'COD' ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-gray-200 hover:border-gray-400'}`}>
           <div className="flex items-center gap-3 border-b border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-gray-900 sm:text-base">
