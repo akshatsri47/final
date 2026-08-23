@@ -7,7 +7,7 @@ import { getBlogById, incrementBlogViews } from '../../../lib/blogFirestore';
 import { BlogData } from '../../../types/blog';
 import { Calendar, User, Tag, ArrowLeft, Eye } from 'lucide-react';
 import { convertToDate } from '../../../types/firebase';
-import { isUsableBlogImageUrl, sanitizeBlogContent } from '../../../lib/blogUtils';
+import { getBlogImageUrl, sanitizeBlogContent } from '../../../lib/blogUtils';
 
 interface BlogDetailClientProps {
   blogId: string;
@@ -128,18 +128,16 @@ export default function BlogDetailClient({ blogId, initialBlog }: BlogDetailClie
         {/* Blog Content */}
         <article className="bg-white rounded-lg shadow-lg overflow-hidden">
           {/* Featured Image */}
-          {isUsableBlogImageUrl(blog.featuredImage?.url) && (
-            <div className="relative h-64 md:h-96 w-full">
-              <Image
-                src={blog.featuredImage.url}
-                alt={blog.featuredImage.altText || blog.title}
-                fill
-                sizes="(max-width: 768px) 100vw, 896px"
-                className="object-cover"
-                priority
-              />
-            </div>
-          )}
+          <div className="relative h-64 md:h-96 w-full">
+            <Image
+              src={getBlogImageUrl(blog)}
+              alt={blog.featuredImage?.altText || blog.title}
+              fill
+              sizes="(max-width: 768px) 100vw, 896px"
+              className="object-cover"
+              priority
+            />
+          </div>
 
           <div className="p-8">
             {/* Categories */}
