@@ -75,40 +75,36 @@ export default function ProductDetails({ product, onReviewsClick }: ProductDetai
     <div className="w-full flex flex-col">
       <h1 className="text-[26px] font-bold leading-tight md:text-3xl">{product.name}</h1>
       <p className="mt-2 text-base leading-6 text-gray-700 md:text-lg">{product.description}</p>
-      <p className="text-sm text-gray-600 md:text-md">Category: {product.category}</p>
 
       <div className="mt-3 w-fit">
         {product.stickerImage ? (
           <Image
             src={product.stickerImage}
             alt={stickerLabel}
-            width={260}
-            height={70}
-            className="h-auto max-h-[70px] w-auto object-contain"
+            width={210}
+            height={54}
+            className="h-auto max-h-[54px] w-auto object-contain"
           />
         ) : (
-          <div className="flex h-12 overflow-hidden rounded-sm text-white shadow-sm">
-            <div className="flex w-14 items-center justify-center bg-[#14743d]">
-              <ThumbsUp className="h-8 w-8" />
+          <div className="flex h-10 overflow-hidden rounded-sm text-white shadow-sm">
+            <div className="flex w-12 items-center justify-center bg-[#14743d]">
+              <ThumbsUp className="h-6 w-6" />
             </div>
-            <div className="flex items-center gap-2 bg-[#ffd21f] px-4 pr-6 text-lg font-extrabold tracking-wide">
+            <div className="flex items-center gap-2 bg-[#ffd21f] px-3 pr-5 text-sm font-extrabold tracking-wide">
               <span className="text-white">★★★★★</span>
               <span>{stickerLabel}</span>
             </div>
           </div>
         )}
       </div>
+      <p className="mt-3 text-sm text-gray-600 md:text-md">Category: {product.category}</p>
 
-      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="flex items-center gap-2 text-[#0f7a45]">
           <CheckCircle className="h-7 w-7 fill-[#0f7a45] text-white" />
           <span className="text-lg font-bold">
             Trusted by <span className="text-2xl">{trustedFarmers}</span> Farmers
           </span>
-        </div>
-        <div className="flex w-fit items-center gap-2 rounded-xl border border-[#b9dec9] bg-[#effaf3] px-4 py-3 text-[#0f7a45]">
-          <CheckCircle className="h-7 w-7 fill-[#0f7a45] text-white" />
-          <span className="text-lg font-bold">No Other Charges</span>
         </div>
       </div>
 
@@ -144,30 +140,15 @@ export default function ProductDetails({ product, onReviewsClick }: ProductDetai
               {appliedDiscount > 0 && (
                 <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">{appliedDiscount}% OFF</span>
               )}
+              <span className="flex items-center gap-1 rounded-lg border border-[#b9dec9] bg-[#effaf3] px-2 py-1 text-xs font-bold text-[#0f7a45]">
+                <CheckCircle className="h-4 w-4 fill-[#0f7a45] text-white" />
+                No Other Charges
+              </span>
             </div>
           </div>
         )}
 
         <p className="text-gray-600">Inclusive of all taxes</p>
-
-        <button
-          type="button"
-          onClick={onReviewsClick}
-          className="mt-4 flex flex-wrap items-center gap-2 text-left"
-        >
-          <span className="flex items-center gap-1 text-yellow-400">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <Star
-                key={index}
-                className={`h-6 w-6 ${
-                  index < Math.round(rating) ? "fill-yellow-400" : "fill-transparent"
-                }`}
-              />
-            ))}
-          </span>
-          <span className="text-2xl font-bold text-gray-900">{rating.toFixed(1)}</span>
-          <span className="text-lg text-gray-500">({verifiedReviewsCount} verified reviews)</span>
-        </button>
 
         <div className="mt-4">
           <p className="font-semibold">Quantity:</p>
@@ -190,6 +171,25 @@ export default function ProductDetails({ product, onReviewsClick }: ProductDetai
           disabled={adding || !selectedPrice}
         >
           {adding ? "Adding..." : "🛒 Add to Cart"}
+        </button>
+
+        <button
+          type="button"
+          onClick={onReviewsClick}
+          className="mt-4 flex flex-wrap items-center gap-2 text-left"
+        >
+          <span className="flex items-center gap-1 text-yellow-400">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <Star
+                key={index}
+                className={`h-6 w-6 ${
+                  index < Math.round(rating) ? "fill-yellow-400" : "fill-transparent"
+                }`}
+              />
+            ))}
+          </span>
+          <span className="text-2xl font-bold text-gray-900">{rating.toFixed(1)}</span>
+          <span className="basis-full text-lg text-gray-500">({verifiedReviewsCount} verified reviews)</span>
         </button>
       </div>
     </div>
