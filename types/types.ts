@@ -24,6 +24,12 @@
       avoidForCrops: string[]; 
       search?:string;
       keywords?:string[];  // Crops to avoid usage (e.g., ['wheat', 'hybrid seed'])
+      stickerImage?: string;
+      stickerLabel?: string;
+      trustedFarmers?: string;
+      rating?: number;
+      verifiedReviewsCount?: number;
+      reviews?: ProductReview[];
       dosage: {
         method: string; // e.g., "mix Vitavax 3Grams..."
         dosage: Array<{
@@ -36,6 +42,13 @@
       codAvailable?: boolean;  // false = online payment only (COD disabled). Missing = COD allowed.
       paymentEligibility?: "FULL_COD_ALLOWED" | "PARTIAL_COD_ONLY" | "PREPAID_ONLY" | "FULL_COD_AND_PREPAID" | "PARTIAL_COD_AND_PREPAID";
           // List of product benefits
+    }
+
+    export interface ProductReview {
+      name: string;
+      rating: number;
+      comment: string;
+      date?: string;
     }
  
     export interface Pricing{
@@ -64,6 +77,12 @@
       dosage: { dose: string; arce: string }[];
       pricing: { packageSize: string; price: number }[];
       images: File[];
+      stickerImage?: File | null;
+      stickerLabel?: string;
+      trustedFarmers?: string;
+      rating?: number;
+      verifiedReviewsCount?: number;
+      reviews?: ProductReview[];
     }
     
   

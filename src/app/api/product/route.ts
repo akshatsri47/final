@@ -36,6 +36,16 @@ export async function POST(req: NextRequest) {
     const commonlyUsedFor = formData.getAll("commonlyUsedFor") as string[];
     const avoidForCrops = formData.getAll("avoidForCrops") as string[];
     const benefits = formData.getAll("benefits") as string[];
+    const stickerLabel = (formData.get("stickerLabel") as string) || "TOP SELLER";
+    const trustedFarmers = (formData.get("trustedFarmers") as string) || "638+";
+    const rating = Number(formData.get("rating") || 4.6);
+    const verifiedReviewsCount = Number(formData.get("verifiedReviewsCount") || 148);
+    const reviews = JSON.parse((formData.get("reviews") as string) || "[]") as {
+      name: string;
+      rating: number;
+      comment: string;
+      date?: string;
+    }[];
 
     // Extracting dosage details
     const method = formData.get("method") as string;
@@ -52,6 +62,7 @@ export async function POST(req: NextRequest) {
 
     // Extract images
     const images = formData.getAll("images") as File[];
+    const stickerImage = formData.get("stickerImage") as File | null;
 
     if (
       !name ||
@@ -86,6 +97,21 @@ export async function POST(req: NextRequest) {
       uploadedImageUrls.push(uploadResponse.secure_url);
     }
 
+    let stickerImageUrl = "";
+    if (stickerImage && stickerImage.size > 0) {
+      const buffer = await stickerImage.arrayBuffer();
+      const base64Image = Buffer.from(buffer).toString("base64");
+      const uploadResponse = await cloudinary.uploader.upload(`data:${stickerImage.type};base64,${base64Image}`, {
+        folder: "products/stickers",
+        format: "jpg",
+        transformation: [
+          { quality: "auto" },
+          { fetch_format: "jpg" },
+        ],
+      });
+      stickerImageUrl = uploadResponse.secure_url;
+    }
+
     // Creating product object
     const newProduct = {
       name,
@@ -97,6 +123,12 @@ export async function POST(req: NextRequest) {
       composition,
       commonlyUsedFor,
       avoidForCrops,
+      stickerImage: stickerImageUrl,
+      stickerLabel,
+      trustedFarmers,
+      rating,
+      verifiedReviewsCount,
+      reviews,
       search, 
       keywords, // ✅ Add searchable keywords
       pricing,
@@ -149,5 +181,4 @@ export async function GET() {
     }, { status: 500 });
   }
 }
-
 

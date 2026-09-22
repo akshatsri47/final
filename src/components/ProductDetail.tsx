@@ -6,6 +6,8 @@ import api from "../app/utils/api";
 import { useState, useEffect } from "react";
 import { useCoupon } from "../app/context/CouponContext";
 import { calculatePricing } from "../app/utils/discount";
+import Image from "next/image";
+import { CheckCircle, Star, ThumbsUp } from "lucide-react";
 
 interface PricingOption {
   packageSize: string;
@@ -14,9 +16,10 @@ interface PricingOption {
 
 interface ProductDetailsProps {
   product: Product;
+  onReviewsClick?: () => void;
 }
 
-export default function ProductDetails({ product }: ProductDetailsProps) {
+export default function ProductDetails({ product, onReviewsClick }: ProductDetailsProps) {
   const { quantity, increaseQuantity, decreaseQuantity } = useQuantity();
   const [adding, setAdding] = useState(false);
   const [selectedPrice, setSelectedPrice] = useState<PricingOption | null>(null);
@@ -30,6 +33,10 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
     product.discount || 0,
     coupon?.discount || 0
   );
+  const stickerLabel = product.stickerLabel || "TOP SELLER";
+  const trustedFarmers = product.trustedFarmers || "638+";
+  const rating = Number(product.rating || 4.6);
+  const verifiedReviewsCount = Number(product.verifiedReviewsCount || 148);
 
   // Set the first package size and price as default on component mount
   useEffect(() => {
@@ -65,10 +72,45 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
   };
 
   return (
-    <div className="w-full md:w-1/2 flex flex-col">
-      <h1 className="text-3xl font-bold">{product.name}</h1>
-      <p className="text-lg text-gray-700 mt-2">{product.description}</p>
-      <p className="text-md text-gray-600">Category: {product.category}</p>
+    <div className="w-full flex flex-col">
+      <h1 className="text-[26px] font-bold leading-tight md:text-3xl">{product.name}</h1>
+      <p className="mt-2 text-base leading-6 text-gray-700 md:text-lg">{product.description}</p>
+      <p className="text-sm text-gray-600 md:text-md">Category: {product.category}</p>
+
+      <div className="mt-3 w-fit">
+        {product.stickerImage ? (
+          <Image
+            src={product.stickerImage}
+            alt={stickerLabel}
+            width={260}
+            height={70}
+            className="h-auto max-h-[70px] w-auto object-contain"
+          />
+        ) : (
+          <div className="flex h-12 overflow-hidden rounded-sm text-white shadow-sm">
+            <div className="flex w-14 items-center justify-center bg-[#14743d]">
+              <ThumbsUp className="h-8 w-8" />
+            </div>
+            <div className="flex items-center gap-2 bg-[#ffd21f] px-4 pr-6 text-lg font-extrabold tracking-wide">
+              <span className="text-white">★★★★★</span>
+              <span>{stickerLabel}</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2 text-[#0f7a45]">
+          <CheckCircle className="h-7 w-7 fill-[#0f7a45] text-white" />
+          <span className="text-lg font-bold">
+            Trusted by <span className="text-2xl">{trustedFarmers}</span> Farmers
+          </span>
+        </div>
+        <div className="flex w-fit items-center gap-2 rounded-xl border border-[#b9dec9] bg-[#effaf3] px-4 py-3 text-[#0f7a45]">
+          <CheckCircle className="h-7 w-7 fill-[#0f7a45] text-white" />
+          <span className="text-lg font-bold">No Other Charges</span>
+        </div>
+      </div>
 
       <div className="bg-white shadow-lg border p-6 rounded-lg mt-6 w-full md:w-3/4">
         <label htmlFor="packageSize" className="block text-sm font-medium text-gray-700">
@@ -107,6 +149,25 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
         )}
 
         <p className="text-gray-600">Inclusive of all taxes</p>
+
+        <button
+          type="button"
+          onClick={onReviewsClick}
+          className="mt-4 flex flex-wrap items-center gap-2 text-left"
+        >
+          <span className="flex items-center gap-1 text-yellow-400">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <Star
+                key={index}
+                className={`h-6 w-6 ${
+                  index < Math.round(rating) ? "fill-yellow-400" : "fill-transparent"
+                }`}
+              />
+            ))}
+          </span>
+          <span className="text-2xl font-bold text-gray-900">{rating.toFixed(1)}</span>
+          <span className="text-lg text-gray-500">({verifiedReviewsCount} verified reviews)</span>
+        </button>
 
         <div className="mt-4">
           <p className="font-semibold">Quantity:</p>

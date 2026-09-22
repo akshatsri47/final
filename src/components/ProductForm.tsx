@@ -17,6 +17,19 @@ interface ProductFormData {
   dosage: { dose: string; arce: string }[];
   pricing: { packageSize: string; price: number }[];
   images: File[];
+  stickerImage: File | null;
+  stickerLabel: string;
+  trustedFarmers: string;
+  rating: number;
+  verifiedReviewsCount: number;
+  reviews: ProductReview[];
+}
+
+interface ProductReview {
+  name: string;
+  rating: number;
+  comment: string;
+  date: string;
 }
 
 export default function ProductForm() {
@@ -32,7 +45,13 @@ export default function ProductForm() {
     method: "",
     dosage: [],
     pricing: [],
-    images: []
+    images: [],
+    stickerImage: null,
+    stickerLabel: "TOP SELLER",
+    trustedFarmers: "638+",
+    rating: 4.6,
+    verifiedReviewsCount: 148,
+    reviews: []
   });
 
   const [pricing, setPricing] = useState<{ packageSize: string; price: number }>({
@@ -43,6 +62,12 @@ export default function ProductForm() {
   const [dose, setDose] = useState<{ dose: string; arce: string }>({
     dose: "",
     arce: "",
+  });
+  const [review, setReview] = useState<ProductReview>({
+    name: "",
+    rating: 5,
+    comment: "",
+    date: "",
   });
 
   const [error, setError] = useState<string>("");
@@ -69,12 +94,22 @@ export default function ProductForm() {
     }
   };
 
+  const handleStickerChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, stickerImage: e.target.files?.[0] || null });
+  };
+
   const handlePricingChange = (e: ChangeEvent<HTMLInputElement>) => {
     setPricing({ ...pricing, [e.target.name]: e.target.value });
   };
 
   const handleDoseChange = (e: ChangeEvent<HTMLInputElement>) => {
     setDose({ ...dose, [e.target.name]: e.target.value });
+  };
+
+  const handleReviewChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setReview({ ...review, [e.target.name]: e.target.value });
   };
 
   const addPricing = () => {
@@ -87,6 +122,15 @@ export default function ProductForm() {
     setDose({ dose: "", arce: "" });
   };
 
+  const addReview = () => {
+    if (!review.name || !review.comment) return;
+    setFormData({
+      ...formData,
+      reviews: [...formData.reviews, { ...review, rating: Number(review.rating) }],
+    });
+    setReview({ name: "", rating: 5, comment: "", date: "" });
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -97,6 +141,10 @@ export default function ProductForm() {
       Object.entries(formData).forEach(([key, value]) => {
         if (key === "images" && Array.isArray(value)) {
           value.forEach((image: File) => data.append("images", image));
+        } else if (key === "stickerImage" && value instanceof File) {
+          data.append("stickerImage", value);
+        } else if (key === "stickerImage") {
+          return;
         } else if (Array.isArray(value) || typeof value === 'object') {
           data.append(key, JSON.stringify(value));
         } else {
@@ -125,14 +173,19 @@ export default function ProductForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       {Object.keys(formData).map((field) =>
-        field !== "images" && field !== "pricing" && field !== "dosage" ? (
+        field !== "images" &&
+        field !== "stickerImage" &&
+        field !== "pricing" &&
+        field !== "dosage" &&
+        field !== "reviews" ? (
           <input
             key={field}
             name={field}
-            type="text"
+            type={field === "rating" || field === "verifiedReviewsCount" ? "number" : "text"}
             placeholder={field}
             className="border p-2"
             onChange={handleChange}
+            value={String(formData[field as keyof ProductFormData] || "")}
           />
         ) : null
       )}
@@ -143,6 +196,13 @@ export default function ProductForm() {
         accept="image/*"
         className="border p-2"
         onChange={handleImageChange}
+      />
+
+      <input
+        type="file"
+        accept="image/*"
+        className="border p-2"
+        onChange={handleStickerChange}
       />
 
       <div className="flex gap-2">
@@ -168,6 +228,51 @@ export default function ProductForm() {
           onClick={addPricing}
         >
           Add Pricing
+        </button>
+      </div>
+
+      <div className="flex flex-col gap-2 border p-3">
+        <p className="font-semibold">Add Review</p>
+        <input
+          name="name"
+          type="text"
+          placeholder="Reviewer Name"
+          className="border p-2"
+          onChange={handleReviewChange}
+          value={review.name}
+        />
+        <input
+          name="rating"
+          type="number"
+          placeholder="Rating"
+          className="border p-2"
+          min={1}
+          max={5}
+          step={0.1}
+          onChange={handleReviewChange}
+          value={review.rating}
+        />
+        <textarea
+          name="comment"
+          placeholder="Review"
+          className="border p-2"
+          onChange={handleReviewChange}
+          value={review.comment}
+        />
+        <input
+          name="date"
+          type="text"
+          placeholder="Date"
+          className="border p-2"
+          onChange={handleReviewChange}
+          value={review.date}
+        />
+        <button
+          type="button"
+          className="btn bg-blue-500 text-white p-2 rounded"
+          onClick={addReview}
+        >
+          Add Review
         </button>
       </div>
 
