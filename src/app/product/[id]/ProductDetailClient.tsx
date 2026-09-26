@@ -245,7 +245,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
         </div>
 
         <section ref={reviewsRef} className="mt-10 bg-white">
-          {showReviews && (
+          {(showReviews || (product.reviews?.length || 0) > 0) && (
             <div className="rounded-lg border border-gray-200 p-4 shadow-sm">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <h3 className="text-xl font-semibold">Customer Reviews</h3>
