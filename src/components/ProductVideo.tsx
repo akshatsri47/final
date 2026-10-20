@@ -59,9 +59,8 @@ function getInstagramMedia(value: string): EmbeddedMedia | null {
     const parts = url.pathname.split("/").filter(Boolean);
     if (!["reel", "reels", "p", "tv"].includes(parts[0]) || !parts[1]) return null;
     if (!/^[A-Za-z0-9_-]+$/.test(parts[1])) return null;
-    const mediaType = parts[0] === "reels" ? "reel" : parts[0];
     return {
-      embedUrl: `https://www.instagram.com/${mediaType}/${parts[1]}/embed/`,
+      embedUrl: `https://www.instagram.com/reel/${parts[1]}/embed/?autoplay=1&muted=1`,
       aspectRatio: 9 / 16,
     };
   } catch {
@@ -245,18 +244,6 @@ export default function ProductVideo({
           >
             <X className="h-4 w-4" />
           </button>
-          {instagramMedia && (
-            <button
-              type="button"
-              onClick={() => setIsOpen(true)}
-              data-no-drag
-              aria-label="Open video in large player"
-              title="Open video"
-              className="absolute bottom-2 right-2 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white shadow backdrop-blur-sm transition hover:bg-black/80"
-            >
-              <Maximize2 className="h-4 w-4" />
-            </button>
-          )}
           <div
             role="button"
             tabIndex={0}
@@ -281,7 +268,7 @@ export default function ProductVideo({
                 title={`${productName} Instagram video preview`}
                 allow="autoplay; encrypted-media; picture-in-picture"
                 allowFullScreen
-                className="h-full w-full border-0 bg-white"
+                className="pointer-events-none h-full w-full border-0 bg-white"
               />
             ) : (
               <video
@@ -300,7 +287,13 @@ export default function ProductVideo({
                 className="h-full w-full object-contain"
               />
             )}
-            {!instagramMedia && (
+            {instagramMedia ? (
+              <span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 transition group-hover:bg-black/15">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white shadow backdrop-blur-sm">
+                  <Maximize2 className="h-5 w-5" />
+                </span>
+              </span>
+            ) : (
               <span className="absolute inset-0 flex items-center justify-center bg-black/0 transition group-hover:bg-black/20">
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-gray-900 shadow">
                   <Play className="ml-0.5 h-5 w-5 fill-current" />
