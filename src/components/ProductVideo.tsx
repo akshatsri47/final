@@ -31,6 +31,22 @@ function getYouTubeId(value: string): string | null {
   return null;
 }
 
+function getInstagramEmbedUrl(value: string): string | null {
+  try {
+    const url = new URL(value);
+    if (url.hostname !== "instagram.com" && !url.hostname.endsWith(".instagram.com")) {
+      return null;
+    }
+    const parts = url.pathname.split("/").filter(Boolean);
+    if (!["reel", "reels", "p", "tv"].includes(parts[0]) || !parts[1]) return null;
+    if (!/^[A-Za-z0-9_-]+$/.test(parts[1])) return null;
+    const mediaType = parts[0] === "reels" ? "reel" : parts[0];
+    return `https://www.instagram.com/${mediaType}/${parts[1]}/embed/`;
+  } catch {
+    return null;
+  }
+}
+
 function isSafeVideoUrl(value: string) {
   try {
     const url = new URL(value);
@@ -56,7 +72,8 @@ export default function ProductVideo({ url, productName }: ProductVideoProps) {
   } | null>(null);
   const suppressOpenRef = useRef(false);
   const youtubeId = useMemo(() => getYouTubeId(url), [url]);
-  const directVideoUrl = !youtubeId && isSafeVideoUrl(url) ? url : null;
+  const instagramEmbedUrl = useMemo(() => getInstagramEmbedUrl(url), [url]);
+  const directVideoUrl = !youtubeId && !instagramEmbedUrl && isSafeVideoUrl(url) ? url : null;
 
   useEffect(() => setIsMounted(true), []);
 
@@ -144,7 +161,7 @@ export default function ProductVideo({ url, productName }: ProductVideoProps) {
     };
   }, [isOpen]);
 
-  if (!isMounted || (!youtubeId && !directVideoUrl)) return null;
+  if (!isMounted || (!youtubeId && !instagramEmbedUrl && !directVideoUrl)) return null;
 
   const youtubePreview = youtubeId
     ? `https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&loop=1&playlist=${youtubeId}&controls=0&modestbranding=1&playsinline=1&rel=0`
@@ -196,6 +213,13 @@ export default function ProductVideo({ url, productName }: ProductVideoProps) {
                 allow="autoplay; encrypted-media; picture-in-picture"
                 className="pointer-events-none h-full w-full border-0"
               />
+            ) : instagramEmbedUrl ? (
+              <iframe
+                src={instagramEmbedUrl}
+                title={`${productName} Instagram video preview`}
+                allow="autoplay; encrypted-media; picture-in-picture"
+                className="pointer-events-none h-full w-full border-0 bg-white"
+              />
             ) : (
               <video
                 src={directVideoUrl || undefined}
@@ -242,6 +266,14 @@ export default function ProductVideo({ url, productName }: ProductVideoProps) {
                 allow="autoplay; encrypted-media; picture-in-picture"
                 allowFullScreen
                 className="aspect-video max-h-[80vh] w-full rounded-lg border-0 bg-black"
+              />
+            ) : instagramEmbedUrl ? (
+              <iframe
+                src={instagramEmbedUrl}
+                title={`${productName} Instagram video`}
+                allow="autoplay; encrypted-media; picture-in-picture"
+                allowFullScreen
+                className="aspect-[9/16] max-h-[80vh] w-full max-w-[430px] rounded-lg border-0 bg-white"
               />
             ) : (
               <video
