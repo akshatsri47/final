@@ -163,28 +163,26 @@ export default function ProductVideo({ url, productName }: ProductVideoProps) {
           onPointerUp={stopDragging}
           onPointerCancel={stopDragging}
           style={position ? { left: position.x, top: position.y } : undefined}
-          className={`fixed z-[80] w-[150px] touch-none overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl sm:w-[180px] ${
+          className={`fixed z-[80] w-[150px] touch-none overflow-hidden rounded-xl border border-white/20 bg-black shadow-2xl ring-1 ring-black/10 sm:w-[180px] ${
             position ? "" : "bottom-4 right-4"
           }`}
         >
-          <div className="flex h-8 items-center justify-between border-b border-gray-200 bg-white px-1">
-            <div
-              aria-hidden="true"
-              className="flex h-7 flex-1 cursor-grab items-center justify-center text-gray-500 active:cursor-grabbing"
-            >
-              <GripHorizontal className="h-5 w-5" />
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsDismissed(true)}
-              data-no-drag
-              aria-label="Close video player"
-              title="Close video player"
-              className="flex h-7 w-7 items-center justify-center text-gray-600 hover:text-gray-950"
-            >
-              <X className="h-4 w-4" />
-            </button>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute left-1/2 top-2 z-20 flex h-6 -translate-x-1/2 items-center rounded-full bg-black/55 px-2 text-white/90 backdrop-blur-sm"
+          >
+            <GripHorizontal className="h-4 w-4" />
           </div>
+          <button
+            type="button"
+            onClick={() => setIsDismissed(true)}
+            data-no-drag
+            aria-label="Close video player"
+            title="Close video player"
+            className="absolute right-2 top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white shadow backdrop-blur-sm transition hover:bg-black/80"
+          >
+            <X className="h-4 w-4" />
+          </button>
           <button
             type="button"
             onClick={openVideo}
