@@ -114,12 +114,8 @@ export default function ProductDetails({ product, onReviewsClick }: ProductDetai
         </div>
       </div>
 
-      <div className="mt-6 flex w-full flex-col items-start gap-4 md:flex-row">
-        <div
-          className={`w-full rounded-lg border bg-white p-6 shadow-lg ${
-            product.videoUrl ? "md:min-w-0 md:flex-1" : "md:w-3/4"
-          }`}
-        >
+      <div className="mt-6 w-full">
+        <div className="w-full rounded-lg border bg-white p-6 shadow-lg md:w-3/4">
           <label htmlFor="packageSize" className="block text-sm font-medium text-gray-700">
             Select Package Size
           </label>
@@ -203,11 +199,7 @@ export default function ProductDetails({ product, onReviewsClick }: ProductDetai
             <span className="basis-full text-lg text-gray-500">({verifiedReviewsCount} verified reviews)</span>
           </button>
         </div>
-        {product.videoUrl && (
-          <div className="w-full md:w-[180px] lg:w-[220px]">
-            <ProductVideo url={product.videoUrl} productName={product.name} />
-          </div>
-        )}
+        {product.videoUrl && <ProductVideo url={product.videoUrl} productName={product.name} />}
       </div>
     </div>
   );

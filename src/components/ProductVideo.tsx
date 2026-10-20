@@ -1,7 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Play, X } from "lucide-react";
+import {
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
+import { GripHorizontal, Play, X } from "lucide-react";
 
 interface ProductVideoProps {
   url: string;
@@ -34,8 +41,63 @@ function isSafeVideoUrl(value: string) {
 
 export default function ProductVideo({ url, productName }: ProductVideoProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
+  const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
+  const playerRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<{
+    pointerId: number;
+    offsetX: number;
+    offsetY: number;
+  } | null>(null);
   const youtubeId = useMemo(() => getYouTubeId(url), [url]);
   const directVideoUrl = !youtubeId && isSafeVideoUrl(url) ? url : null;
+
+  const keepOnScreen = useCallback((x: number, y: number) => {
+    const player = playerRef.current;
+    if (!player) return { x, y };
+    const padding = 8;
+    const maxX = Math.max(padding, window.innerWidth - player.offsetWidth - padding);
+    const maxY = Math.max(padding, window.innerHeight - player.offsetHeight - padding);
+    return {
+      x: Math.min(Math.max(padding, x), maxX),
+      y: Math.min(Math.max(padding, y), maxY),
+    };
+  }, []);
+
+  const startDragging = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    const player = playerRef.current;
+    if (!player) return;
+    const rect = player.getBoundingClientRect();
+    dragRef.current = {
+      pointerId: event.pointerId,
+      offsetX: event.clientX - rect.left,
+      offsetY: event.clientY - rect.top,
+    };
+    setPosition({ x: rect.left, y: rect.top });
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const movePlayer = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    setPosition(keepOnScreen(event.clientX - drag.offsetX, event.clientY - drag.offsetY));
+  };
+
+  const stopDragging = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (dragRef.current?.pointerId !== event.pointerId) return;
+    dragRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  };
+
+  useEffect(() => {
+    const keepPlayerVisible = () => setPosition((current) => (
+      current ? keepOnScreen(current.x, current.y) : current
+    ));
+    window.addEventListener("resize", keepPlayerVisible);
+    return () => window.removeEventListener("resize", keepPlayerVisible);
+  }, [keepOnScreen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -62,36 +124,69 @@ export default function ProductVideo({ url, productName }: ProductVideoProps) {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setIsOpen(true)}
-        aria-label={`Open video for ${productName}`}
-        className="group relative aspect-[9/16] w-full max-w-[220px] shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-black shadow-lg"
-      >
-        {youtubeId ? (
-          <iframe
-            src={youtubePreview}
-            title={`${productName} video preview`}
-            allow="autoplay; encrypted-media; picture-in-picture"
-            className="pointer-events-none h-full w-full border-0"
-          />
-        ) : (
-          <video
-            src={directVideoUrl || undefined}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            className="h-full w-full object-cover"
-          />
-        )}
-        <span className="absolute inset-0 flex items-center justify-center bg-black/0 transition group-hover:bg-black/20">
-          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-gray-900 shadow">
-            <Play className="ml-0.5 h-5 w-5 fill-current" />
-          </span>
-        </span>
-      </button>
+      {!isDismissed && (
+        <div
+          ref={playerRef}
+          style={position ? { left: position.x, top: position.y } : undefined}
+          className={`fixed z-40 w-[150px] overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl sm:w-[180px] ${
+            position ? "" : "bottom-4 right-4"
+          }`}
+        >
+          <div className="flex h-8 items-center justify-between border-b border-gray-200 bg-white px-1">
+            <button
+              type="button"
+              onPointerDown={startDragging}
+              onPointerMove={movePlayer}
+              onPointerUp={stopDragging}
+              onPointerCancel={stopDragging}
+              aria-label="Move video player"
+              title="Move video player"
+              className="flex h-7 flex-1 touch-none cursor-grab items-center justify-center text-gray-500 active:cursor-grabbing"
+            >
+              <GripHorizontal className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsDismissed(true)}
+              aria-label="Close video player"
+              title="Close video player"
+              className="flex h-7 w-7 items-center justify-center text-gray-600 hover:text-gray-950"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsOpen(true)}
+            aria-label={`Open video for ${productName}`}
+            className="group relative block aspect-[9/16] w-full overflow-hidden bg-black"
+          >
+            {youtubeId ? (
+              <iframe
+                src={youtubePreview}
+                title={`${productName} video preview`}
+                allow="autoplay; encrypted-media; picture-in-picture"
+                className="pointer-events-none h-full w-full border-0"
+              />
+            ) : (
+              <video
+                src={directVideoUrl || undefined}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                className="h-full w-full object-cover"
+              />
+            )}
+            <span className="absolute inset-0 flex items-center justify-center bg-black/0 transition group-hover:bg-black/20">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-gray-900 shadow">
+                <Play className="ml-0.5 h-5 w-5 fill-current" />
+              </span>
+            </span>
+          </button>
+        </div>
+      )}
 
       {isOpen && (
         <div
