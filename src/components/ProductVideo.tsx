@@ -16,14 +16,32 @@ interface ProductVideoProps {
   productName: string;
 }
 
-function getYouTubeId(value: string): string | null {
+interface EmbeddedMedia {
+  embedUrl: string;
+  aspectRatio: number;
+}
+
+interface YouTubeMedia {
+  id: string;
+  aspectRatio: number;
+}
+
+function getYouTubeMedia(value: string): YouTubeMedia | null {
   try {
     const url = new URL(value);
-    if (url.hostname === "youtu.be") return url.pathname.split("/").filter(Boolean)[0] || null;
+    if (url.hostname === "youtu.be") {
+      const id = url.pathname.split("/").filter(Boolean)[0];
+      return id ? { id, aspectRatio: 16 / 9 } : null;
+    }
     if (url.hostname.endsWith("youtube.com")) {
-      if (url.pathname === "/watch") return url.searchParams.get("v");
+      if (url.pathname === "/watch") {
+        const id = url.searchParams.get("v");
+        return id ? { id, aspectRatio: 16 / 9 } : null;
+      }
       const parts = url.pathname.split("/").filter(Boolean);
-      if (["embed", "shorts", "live"].includes(parts[0])) return parts[1] || null;
+      if (["embed", "shorts", "live"].includes(parts[0]) && parts[1]) {
+        return { id: parts[1], aspectRatio: parts[0] === "shorts" ? 9 / 16 : 16 / 9 };
+      }
     }
   } catch {
     return null;
@@ -31,7 +49,7 @@ function getYouTubeId(value: string): string | null {
   return null;
 }
 
-function getInstagramEmbedUrl(value: string): string | null {
+function getInstagramMedia(value: string): EmbeddedMedia | null {
   try {
     const url = new URL(value);
     if (url.hostname !== "instagram.com" && !url.hostname.endsWith(".instagram.com")) {
@@ -41,7 +59,10 @@ function getInstagramEmbedUrl(value: string): string | null {
     if (!["reel", "reels", "p", "tv"].includes(parts[0]) || !parts[1]) return null;
     if (!/^[A-Za-z0-9_-]+$/.test(parts[1])) return null;
     const mediaType = parts[0] === "reels" ? "reel" : parts[0];
-    return `https://www.instagram.com/${mediaType}/${parts[1]}/embed/`;
+    return {
+      embedUrl: `https://www.instagram.com/${mediaType}/${parts[1]}/embed/`,
+      aspectRatio: mediaType === "p" ? 1 : 9 / 16,
+    };
   } catch {
     return null;
   }
@@ -61,6 +82,7 @@ export default function ProductVideo({ url, productName }: ProductVideoProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
+  const [directAspectRatio, setDirectAspectRatio] = useState(16 / 9);
   const playerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{
     pointerId: number;
@@ -71,9 +93,19 @@ export default function ProductVideo({ url, productName }: ProductVideoProps) {
     moved: boolean;
   } | null>(null);
   const suppressOpenRef = useRef(false);
-  const youtubeId = useMemo(() => getYouTubeId(url), [url]);
-  const instagramEmbedUrl = useMemo(() => getInstagramEmbedUrl(url), [url]);
-  const directVideoUrl = !youtubeId && !instagramEmbedUrl && isSafeVideoUrl(url) ? url : null;
+  const youtubeMedia = useMemo(() => getYouTubeMedia(url), [url]);
+  const instagramMedia = useMemo(() => getInstagramMedia(url), [url]);
+  const youtubeId = youtubeMedia?.id || null;
+  const instagramEmbedUrl = instagramMedia?.embedUrl || null;
+  const directVideoUrl = !youtubeMedia && !instagramMedia && isSafeVideoUrl(url) ? url : null;
+  const previewAspectRatio = youtubeMedia?.aspectRatio
+    ?? instagramMedia?.aspectRatio
+    ?? directAspectRatio;
+  const playerWidth = previewAspectRatio < 0.9
+    ? "w-[150px] sm:w-[180px]"
+    : previewAspectRatio <= 1.1
+      ? "w-[180px] sm:w-[220px]"
+      : "w-[240px] sm:w-[320px]";
 
   useEffect(() => setIsMounted(true), []);
 
@@ -129,6 +161,7 @@ export default function ProductVideo({ url, productName }: ProductVideoProps) {
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
+    if (!drag.moved) setIsOpen(true);
   };
 
   const openVideo = () => {
@@ -146,6 +179,10 @@ export default function ProductVideo({ url, productName }: ProductVideoProps) {
     window.addEventListener("resize", keepPlayerVisible);
     return () => window.removeEventListener("resize", keepPlayerVisible);
   }, [keepOnScreen]);
+
+  useEffect(() => {
+    setPosition((current) => current ? keepOnScreen(current.x, current.y) : current);
+  }, [directAspectRatio, keepOnScreen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -180,7 +217,7 @@ export default function ProductVideo({ url, productName }: ProductVideoProps) {
           onPointerUp={stopDragging}
           onPointerCancel={stopDragging}
           style={position ? { left: position.x, top: position.y } : undefined}
-          className={`fixed z-[80] w-[150px] touch-none overflow-hidden rounded-xl border border-white/20 bg-black shadow-2xl ring-1 ring-black/10 sm:w-[180px] ${
+          className={`fixed z-[80] max-w-[calc(100vw-1rem)] touch-none overflow-hidden rounded-xl border border-white/20 bg-black shadow-2xl ring-1 ring-black/10 ${playerWidth} ${
             position ? "" : "bottom-4 right-4"
           }`}
         >
@@ -204,7 +241,8 @@ export default function ProductVideo({ url, productName }: ProductVideoProps) {
             type="button"
             onClick={openVideo}
             aria-label={`Open video for ${productName}`}
-            className="group relative block aspect-[9/16] w-full cursor-grab overflow-hidden bg-black active:cursor-grabbing"
+            style={{ aspectRatio: previewAspectRatio }}
+            className="group relative block w-full cursor-grab overflow-hidden bg-black active:cursor-grabbing"
           >
             {youtubeId ? (
               <iframe
@@ -228,7 +266,13 @@ export default function ProductVideo({ url, productName }: ProductVideoProps) {
                 loop
                 playsInline
                 preload="metadata"
-                className="h-full w-full object-cover"
+                onLoadedMetadata={(event) => {
+                  const video = event.currentTarget;
+                  if (video.videoWidth && video.videoHeight) {
+                    setDirectAspectRatio(video.videoWidth / video.videoHeight);
+                  }
+                }}
+                className="h-full w-full object-contain"
               />
             )}
             <span className="absolute inset-0 flex items-center justify-center bg-black/0 transition group-hover:bg-black/20">
@@ -265,7 +309,8 @@ export default function ProductVideo({ url, productName }: ProductVideoProps) {
                 title={`${productName} video`}
                 allow="autoplay; encrypted-media; picture-in-picture"
                 allowFullScreen
-                className="aspect-video max-h-[80vh] w-full rounded-lg border-0 bg-black"
+                style={{ aspectRatio: youtubeMedia?.aspectRatio }}
+                className="max-h-[80vh] w-full rounded-lg border-0 bg-black"
               />
             ) : instagramEmbedUrl ? (
               <iframe
@@ -273,7 +318,8 @@ export default function ProductVideo({ url, productName }: ProductVideoProps) {
                 title={`${productName} Instagram video`}
                 allow="autoplay; encrypted-media; picture-in-picture"
                 allowFullScreen
-                className="aspect-[9/16] max-h-[80vh] w-full max-w-[430px] rounded-lg border-0 bg-white"
+                style={{ aspectRatio: instagramMedia?.aspectRatio }}
+                className="max-h-[80vh] w-full max-w-[430px] rounded-lg border-0 bg-white"
               />
             ) : (
               <video
