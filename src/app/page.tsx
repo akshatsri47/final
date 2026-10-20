@@ -11,6 +11,7 @@ import QuestionnaireAlert from "@/components/QuestionnaireAlert";
 import { normalizeCategory } from "../../utils/normalizeCategory";
 import StructuredDataComponent from "@/components/StructuredData";
 import { generateLocalBusinessStructuredData, generateFAQStructuredData } from "@/lib/seo";
+import ProductVideo from "@/components/ProductVideo";
 
 export const dynamic = "force-dynamic"; // Forces SSR
 
@@ -77,8 +78,26 @@ async function fetchProducts(): Promise<{ products: Product[]; error: string | n
   }
 }
 
+async function fetchHomeVideo(): Promise<string> {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/site-video`,
+      { cache: "no-store" }
+    );
+    if (!res.ok) return "";
+    const data = await res.json();
+    return typeof data.videoUrl === "string" ? data.videoUrl : "";
+  } catch (error) {
+    console.error("Failed to load home video:", error);
+    return "";
+  }
+}
+
 export default async function ProductList() {
-  const { products, error } = await fetchProducts();
+  const [{ products, error }, homeVideoUrl] = await Promise.all([
+    fetchProducts(),
+    fetchHomeVideo(),
+  ]);
   // Group by the original product.category (not the slug)
   const groupedProducts: { [key: string]: Product[] } = products.reduce(
     (acc, product) => {
@@ -152,6 +171,13 @@ export default async function ProductList() {
         {/* Footer content here */}
       </footer>
       <QuestionnaireAlert />
+      {homeVideoUrl && (
+        <ProductVideo
+          url={homeVideoUrl}
+          productName="Krashi Doctor"
+          initialSide="left"
+        />
+      )}
       <a
         href="https://wa.me/917470884789"
         target="_blank"

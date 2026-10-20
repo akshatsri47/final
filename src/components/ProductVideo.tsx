@@ -14,6 +14,7 @@ import { GripHorizontal, Play, X } from "lucide-react";
 interface ProductVideoProps {
   url: string;
   productName: string;
+  initialSide?: "left" | "right";
 }
 
 interface EmbeddedMedia {
@@ -77,7 +78,11 @@ function isSafeVideoUrl(value: string) {
   }
 }
 
-export default function ProductVideo({ url, productName }: ProductVideoProps) {
+export default function ProductVideo({
+  url,
+  productName,
+  initialSide = "right",
+}: ProductVideoProps) {
   const [isMounted, setIsMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
@@ -218,7 +223,7 @@ export default function ProductVideo({ url, productName }: ProductVideoProps) {
           onPointerCancel={stopDragging}
           style={position ? { left: position.x, top: position.y } : undefined}
           className={`fixed z-[80] max-w-[calc(100vw-1rem)] touch-none overflow-hidden rounded-xl border border-white/20 bg-black shadow-2xl ring-1 ring-black/10 ${playerWidth} ${
-            position ? "" : "bottom-4 right-4"
+            position ? "" : initialSide === "left" ? "bottom-4 left-4" : "bottom-4 right-4"
           }`}
         >
           <div
