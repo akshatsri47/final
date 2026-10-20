@@ -9,7 +9,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { createPortal } from "react-dom";
-import { GripHorizontal, Play, X } from "lucide-react";
+import { GripHorizontal, Maximize2, Play, X } from "lucide-react";
 
 interface ProductVideoProps {
   url: string;
@@ -62,7 +62,7 @@ function getInstagramMedia(value: string): EmbeddedMedia | null {
     const mediaType = parts[0] === "reels" ? "reel" : parts[0];
     return {
       embedUrl: `https://www.instagram.com/${mediaType}/${parts[1]}/embed/`,
-      aspectRatio: mediaType === "p" ? 1 : 9 / 16,
+      aspectRatio: 9 / 16,
     };
   } catch {
     return null;
@@ -96,6 +96,7 @@ export default function ProductVideo({
     startX: number;
     startY: number;
     moved: boolean;
+    openOnTap: boolean;
   } | null>(null);
   const suppressOpenRef = useRef(false);
   const youtubeMedia = useMemo(() => getYouTubeMedia(url), [url]);
@@ -138,6 +139,7 @@ export default function ProductVideo({
       startX: event.clientX,
       startY: event.clientY,
       moved: false,
+      openOnTap: !(event.target as HTMLElement).closest("[data-drag-only]"),
     };
     setPosition({ x: rect.left, y: rect.top });
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -166,7 +168,7 @@ export default function ProductVideo({
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
-    if (!drag.moved) setIsOpen(true);
+    if (!drag.moved && drag.openOnTap) setIsOpen(true);
   };
 
   const openVideo = () => {
@@ -228,7 +230,8 @@ export default function ProductVideo({
         >
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute left-1/2 top-2 z-20 flex h-6 -translate-x-1/2 items-center rounded-full bg-black/55 px-2 text-white/90 backdrop-blur-sm"
+            data-drag-only
+            className="absolute left-1/2 top-2 z-20 flex h-6 -translate-x-1/2 cursor-grab items-center rounded-full bg-black/55 px-2 text-white/90 backdrop-blur-sm active:cursor-grabbing"
           >
             <GripHorizontal className="h-4 w-4" />
           </div>
@@ -242,9 +245,25 @@ export default function ProductVideo({
           >
             <X className="h-4 w-4" />
           </button>
-          <button
-            type="button"
+          {instagramMedia && (
+            <button
+              type="button"
+              onClick={() => setIsOpen(true)}
+              data-no-drag
+              aria-label="Open video in large player"
+              title="Open video"
+              className="absolute bottom-2 right-2 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white shadow backdrop-blur-sm transition hover:bg-black/80"
+            >
+              <Maximize2 className="h-4 w-4" />
+            </button>
+          )}
+          <div
+            role="button"
+            tabIndex={0}
             onClick={openVideo}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") openVideo();
+            }}
             aria-label={`Open video for ${productName}`}
             style={{ aspectRatio: previewAspectRatio }}
             className="group relative block w-full cursor-grab overflow-hidden bg-black active:cursor-grabbing"
@@ -261,7 +280,8 @@ export default function ProductVideo({
                 src={instagramEmbedUrl}
                 title={`${productName} Instagram video preview`}
                 allow="autoplay; encrypted-media; picture-in-picture"
-                className="pointer-events-none h-full w-full border-0 bg-white"
+                allowFullScreen
+                className="h-full w-full border-0 bg-white"
               />
             ) : (
               <video
@@ -280,12 +300,14 @@ export default function ProductVideo({
                 className="h-full w-full object-contain"
               />
             )}
-            <span className="absolute inset-0 flex items-center justify-center bg-black/0 transition group-hover:bg-black/20">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-gray-900 shadow">
-                <Play className="ml-0.5 h-5 w-5 fill-current" />
+            {!instagramMedia && (
+              <span className="absolute inset-0 flex items-center justify-center bg-black/0 transition group-hover:bg-black/20">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-gray-900 shadow">
+                  <Play className="ml-0.5 h-5 w-5 fill-current" />
+                </span>
               </span>
-            </span>
-          </button>
+            )}
+          </div>
         </div>
       )}
 
