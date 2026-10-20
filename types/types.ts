@@ -119,6 +119,7 @@
     paymentVerified?: boolean; // true once PhonePe payment (full online amount or COD advance) is verified server-side
     paidAmount?: number;  // amount actually paid online, in rupees (from the PhonePe status check)
     fullCodAllowed?: boolean; // final order value is at or below ₹500
+    failedPaymentFullCodAllowed?: boolean;
     cancelledAt?: string;
     refundId?: string;
     refundState?: string;

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { createShiprocketOrder, updateOrderStatus } from "@/components/Orderservice";
 
 interface Order {
   id: string;
@@ -14,6 +15,8 @@ interface Order {
   codDueAmount?: number;     // COD: 85% due on delivery
   onlinePaymentDiscountPercent?: number;
   onlinePaymentDiscountAmount?: number;
+  paymentVerified?: boolean;
+  failedPaymentFullCodAllowed?: boolean;
   cancelledAt?: string;
 }
 
@@ -21,6 +24,9 @@ export default function OrderDetailsPage() {
   const { id } = useParams();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showCodRecovery, setShowCodRecovery] = useState(false);
+  const [isConvertingToCod, setIsConvertingToCod] = useState(false);
+  const [conversionError, setConversionError] = useState("");
 
   useEffect(() => {
     fetchOrderDetails();
@@ -34,11 +40,45 @@ export default function OrderDetailsPage() {
       const data = await response.json();
       if (data.success) {
         setOrder(data.data);
+        setShowCodRecovery(
+          data.data.status === "Payment Failed" &&
+          data.data.failedPaymentFullCodAllowed === true &&
+          !data.data.cancelledAt
+        );
       }
     } catch (error) {
       console.error("Error fetching order:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const convertToFullCod = async () => {
+    const userId = localStorage.getItem("userId") || "";
+    const orderId = String(id || "");
+    if (!userId || !orderId || isConvertingToCod) return;
+
+    setIsConvertingToCod(true);
+    setConversionError("");
+    try {
+      const response = await fetch("/api/order/full-cod", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, userId }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || "Unable to switch to Full COD");
+
+      await createShiprocketOrder(userId, "FULL_COD", orderId);
+      const statusUpdated = await updateOrderStatus(orderId, "Full COD Confirmed - Ready to Ship", userId);
+      if (!statusUpdated) throw new Error("The COD order was created, but its status could not be refreshed.");
+
+      setShowCodRecovery(false);
+      await fetchOrderDetails();
+    } catch (error) {
+      setConversionError(error instanceof Error ? error.message : "Unable to switch to Full COD");
+    } finally {
+      setIsConvertingToCod(false);
     }
   };
 
@@ -81,12 +121,18 @@ export default function OrderDetailsPage() {
         {(order?.onlinePaymentDiscountAmount ?? 0) > 0 && (
           <p className="text-green-700">Full prepaid discount ({order?.onlinePaymentDiscountPercent}%): <span className="font-bold">−₹{order?.onlinePaymentDiscountAmount}</span></p>
         )}
-        {(order?.paymentMethod === "COD" || order?.paymentMethod === "FULL_COD") && (order?.codDueAmount ?? 0) > 0 && (
+        {order?.status === "Payment Failed" && order?.paymentMethod === "COD" ? (
+          <p className="font-medium text-red-600">
+            Online advance payment of ₹{order.codAdvanceAmount ?? 0} failed. No amount was paid.
+          </p>
+        ) : order?.paymentMethod === "COD" && order?.paymentVerified && (order?.codDueAmount ?? 0) > 0 ? (
           <p className="text-gray-600">
             Paid online: <span className="font-bold text-green-700">₹{order?.codAdvanceAmount}</span>
             {" · "}Due on delivery: <span className="font-bold">₹{order?.codDueAmount}</span>
           </p>
-        )}
+        ) : order?.paymentMethod === "FULL_COD" && (order?.codDueAmount ?? 0) > 0 ? (
+          <p className="text-gray-600">Full amount due on delivery: <span className="font-bold">₹{order.codDueAmount}</span></p>
+        ) : null}
         <p className="text-gray-600">Status: <span className="font-bold">{order?.status}</span></p>
         <p className="text-gray-600">Placed on: {new Date(order?.createdAt || "").toLocaleString()}</p>
 
@@ -106,7 +152,42 @@ export default function OrderDetailsPage() {
             Cancel Order
           </button>
         )}
+        {order?.status === "Payment Failed" && order.failedPaymentFullCodAllowed && !order.cancelledAt && (
+          <button onClick={() => setShowCodRecovery(true)} className="mt-4 ml-3 bg-green-600 text-white px-4 py-2 rounded shadow">
+            Use Full COD
+          </button>
+        )}
       </div>
+
+      {showCodRecovery && order && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div role="dialog" aria-modal="true" aria-labelledby="cod-recovery-title" className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <h2 id="cod-recovery-title" className="text-2xl font-bold text-gray-900">Payment Failed</h2>
+            <p className="mt-3 text-gray-600">
+              No online payment was received. You can confirm this order with Full Cash on Delivery and pay ₹{order.totalAmount} when it arrives.
+            </p>
+            {conversionError && <p className="mt-3 text-sm font-medium text-red-600">{conversionError}</p>}
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={convertToFullCod}
+                disabled={isConvertingToCod}
+                className="flex-1 rounded-md bg-green-600 px-4 py-3 font-semibold text-white hover:bg-green-700 disabled:cursor-wait disabled:bg-gray-400"
+              >
+                {isConvertingToCod ? "Confirming..." : "Confirm Full COD"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowCodRecovery(false)}
+                disabled={isConvertingToCod}
+                className="rounded-md border border-gray-300 px-4 py-3 font-semibold text-gray-700"
+              >
+                Not Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

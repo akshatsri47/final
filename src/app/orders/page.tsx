@@ -21,6 +21,7 @@ interface Order {
   codDueAmount?: number;     // COD: 85% due on delivery
   onlinePaymentDiscountPercent?: number;
   onlinePaymentDiscountAmount?: number;
+  paymentVerified?: boolean;
 }
 
 export default function OrdersPage() {
@@ -75,12 +76,16 @@ export default function OrdersPage() {
               {(order.onlinePaymentDiscountAmount ?? 0) > 0 && (
                 <p className="text-green-700">Full prepaid discount ({order.onlinePaymentDiscountPercent}%): <span className="font-bold">−₹{order.onlinePaymentDiscountAmount}</span></p>
               )}
-              {(order.paymentMethod === "COD" || order.paymentMethod === "FULL_COD") && (order.codDueAmount ?? 0) > 0 && (
+              {order.status === "Payment Failed" && order.paymentMethod === "COD" ? (
+                <p className="font-medium text-red-600">Online advance payment of ₹{order.codAdvanceAmount ?? 0} failed. No amount was paid.</p>
+              ) : order.paymentMethod === "COD" && order.paymentVerified && (order.codDueAmount ?? 0) > 0 ? (
                 <p className="text-gray-600">
                   Paid online: <span className="font-bold text-green-700">₹{order.codAdvanceAmount}</span>
                   {" · "}Due on delivery: <span className="font-bold">₹{order.codDueAmount}</span>
                 </p>
-              )}
+              ) : order.paymentMethod === "FULL_COD" && (order.codDueAmount ?? 0) > 0 ? (
+                <p className="text-gray-600">Full amount due on delivery: <span className="font-bold">₹{order.codDueAmount}</span></p>
+              ) : null}
               <p className="text-gray-600">Status: <span className="font-bold">{order.status}</span></p>
               <p className="text-gray-600">Placed on: {new Date(order.createdAt).toLocaleString()}</p>
 

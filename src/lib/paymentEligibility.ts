@@ -56,3 +56,14 @@ export function resolveCartPaymentRules(
     restriction: (allAllowPrepaid ? "FULL_COD_AND_PREPAID" : "FULL_COD_ALLOWED") as ProductPaymentEligibility,
   };
 }
+
+export function canRecoverFailedPaymentWithFullCod(
+  items: Array<{ paymentEligibility?: string; codAvailable?: boolean }>,
+  orderValue: number,
+) {
+  if (!items.length || orderValue <= 0 || orderValue > FULL_COD_MAX_ORDER_VALUE) return false;
+
+  return items.every((item) =>
+    normalizePaymentEligibility(item.paymentEligibility, item.codAvailable !== false) !== "PREPAID_ONLY"
+  );
+}

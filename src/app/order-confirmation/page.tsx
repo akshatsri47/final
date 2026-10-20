@@ -58,8 +58,7 @@ function OrderConfirmationContent() {
                         setCodAdvanceAmount(orderRes.data.data.codAdvanceAmount ?? 0);
                         setCodDueAmount(orderRes.data.data.codDueAmount ?? 0);
                         setCanUseFullCod(
-                            orderRes.data.data.fullCodAllowed === true &&
-                            orderRes.data.data.allowedPaymentMethods?.includes("FULL_COD")
+                            orderRes.data.data.failedPaymentFullCodAllowed === true
                         );
                     }
                 } catch (fetchError) {

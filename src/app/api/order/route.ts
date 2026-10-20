@@ -12,7 +12,7 @@ import {
 } from "firebase/firestore";
 import { Order } from "../../../../types/types";
 import { cookies } from "next/headers";
-import { COD_ADVANCE_PERCENT, FULL_PREPAID_DISCOUNT_PERCENT, PaymentMethod, normalizePaymentEligibility, resolveCartPaymentRules, roundCurrency } from "@/lib/paymentEligibility";
+import { canRecoverFailedPaymentWithFullCod, COD_ADVANCE_PERCENT, FULL_PREPAID_DISCOUNT_PERCENT, PaymentMethod, normalizePaymentEligibility, resolveCartPaymentRules, roundCurrency } from "@/lib/paymentEligibility";
 
 
 
@@ -147,6 +147,7 @@ export async function POST(req: NextRequest) {
       : 0;
     totalAmount = roundCurrency(totalBeforePaymentDiscount - onlinePaymentDiscountAmount);
     const fullCodAllowed = paymentRules.allowedMethods.includes("FULL_COD");
+    const failedPaymentFullCodAllowed = canRecoverFailedPaymentWithFullCod(filteredCartItems, totalBeforePaymentDiscount);
     const codAdvanceAmount =
       paymentMethod === "COD" ? roundCurrency((totalAmount * COD_ADVANCE_PERCENT) / 100) : 0;
     const codDueAmount =
@@ -167,6 +168,7 @@ export async function POST(req: NextRequest) {
       shippingCharges,
       taxAmount,
       fullCodAllowed,
+      failedPaymentFullCodAllowed,
       paymentRestriction,
       allowedPaymentMethods: paymentRules.allowedMethods,
       paymentMethod,
@@ -256,8 +258,14 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ success: false, error: "Not authorized to view this order" }, { status: 403 });
       }
 
+      const orderData = orderSnap.data();
+      const failedPaymentFullCodAllowed = orderData.failedPaymentFullCodAllowed ?? canRecoverFailedPaymentWithFullCod(
+        orderData.items || [],
+        Number(orderData.totalBeforePaymentDiscount ?? orderData.totalAmount) || 0,
+      );
+
       return NextResponse.json(
-        { success: true, data: { id: orderSnap.id, ...orderSnap.data() }, msg: "Order fetched successfully" },
+        { success: true, data: { id: orderSnap.id, ...orderData, failedPaymentFullCodAllowed }, msg: "Order fetched successfully" },
         { status: 200 }
       );
     } else if (userId) {
@@ -265,10 +273,17 @@ export async function GET(req: NextRequest) {
       const ordersQuery = query(collection(db, "orders"), where("userId", "==", userId));
       const ordersSnap = await getDocs(ordersQuery);
 
-      const orders: Order[] = ordersSnap.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Order[];
+      const orders: Order[] = ordersSnap.docs.map((orderDoc) => {
+        const orderData = orderDoc.data();
+        return {
+          id: orderDoc.id,
+          ...orderData,
+          failedPaymentFullCodAllowed: orderData.failedPaymentFullCodAllowed ?? canRecoverFailedPaymentWithFullCod(
+            orderData.items || [],
+            Number(orderData.totalBeforePaymentDiscount ?? orderData.totalAmount) || 0,
+          ),
+        } as Order;
+      });
 
       return NextResponse.json(
         { success: true, data: orders, msg: `Fetched all orders of user ${userId}` },

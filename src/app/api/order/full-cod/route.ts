@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { doc, getDoc, runTransaction, updateDoc } from "firebase/firestore";
 import { db } from "../../../../../utils/firebase";
+import { canRecoverFailedPaymentWithFullCod } from "@/lib/paymentEligibility";
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,11 +21,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Not authorized to update this order" }, { status: 403 });
     }
 
+    const currentProductRules: Array<{ paymentEligibility?: string; codAvailable?: boolean }> = [];
     for (const item of initialOrder.items || []) {
       const productSnapshot = await getDoc(doc(db, "products", item.productId));
       if (!productSnapshot.exists() || productSnapshot.data().isOutOfStock === true) {
         return NextResponse.json({ success: false, error: `${item.name || "A product"} is out of stock` }, { status: 409 });
       }
+      currentProductRules.push(productSnapshot.data());
     }
 
     const result = await runTransaction(db, async (transaction) => {
@@ -42,12 +45,11 @@ export async function POST(req: NextRequest) {
       if (order.status !== "Payment Failed") {
         throw new Error("Full COD is available only after a failed payment");
       }
-      if (!order.fullCodAllowed || !order.allowedPaymentMethods?.includes("FULL_COD")) {
-        throw new Error("Full COD is not available for this order");
-      }
-
       const fullCodAmount = Number(order.totalBeforePaymentDiscount ?? order.totalAmount) || 0;
       if (fullCodAmount <= 0) throw new Error("Invalid order amount");
+      const recoveryAllowed = canRecoverFailedPaymentWithFullCod(order.items || [], fullCodAmount)
+        && canRecoverFailedPaymentWithFullCod(currentProductRules, fullCodAmount);
+      if (!recoveryAllowed) throw new Error("Full COD is not available for this order");
 
       transaction.update(orderRef, {
         fallbackFromPaymentMethod: order.paymentMethod,
