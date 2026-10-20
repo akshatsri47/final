@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "About Us - Agricultural Excellence Since 1973 | PaceIT",
     description: "Discover our 50+ year journey in agricultural solutions. Serving 10,000+ farmers with quality products and expert advice.",
-    url: "https://paceit.com/about",
+    url: "https://www.krishdoctor.in/about",
     images: [
       {
         url: "/profile/downloads1.jpg",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     ],
   },
   alternates: {
-    canonical: "https://paceit.com/about",
+    canonical: "https://www.krishdoctor.in/about",
   },
 };
 

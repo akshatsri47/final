@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Contact Us - Get Expert Agricultural Advice | PaceIT",
     description: "Contact PaceIT for expert agricultural advice, product information, and technical support.",
-    url: "https://paceit.com/contact",
+    url: "https://www.krishdoctor.in/contact",
     images: [
       {
         url: "/banner1.jpg",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     ],
   },
   alternates: {
-    canonical: "https://paceit.com/contact",
+    canonical: "https://www.krishdoctor.in/contact",
   },
 };
 

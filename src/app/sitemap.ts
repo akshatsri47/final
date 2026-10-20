@@ -1,9 +1,15 @@
 import { MetadataRoute } from 'next'
 import { getBlogs } from '../lib/blogFirestore'
 import { convertToDate } from '../types/firebase'
+import { Product } from '../../types/types'
+import { getProductPath } from '../lib/productUrl'
+
+export const revalidate = 3600
+
+type SitemapProduct = Product & { updatedAt?: string }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.krishdoctor.in'
+  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.krishdoctor.in').replace(/\/$/, '')
   
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [
@@ -78,6 +84,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch blog pages for dynamic sitemap entries
   let blogPages: MetadataRoute.Sitemap = []
   let blogCategoryPages: MetadataRoute.Sitemap = []
+  let productPages: MetadataRoute.Sitemap = []
+
+  try {
+    const productsResponse = await fetch(`${baseUrl}/api/product`, {
+      next: { revalidate: 3600 },
+    })
+
+    if (!productsResponse.ok) {
+      throw new Error(`Product API returned ${productsResponse.status}`)
+    }
+
+    const productsData = await productsResponse.json() as { data?: SitemapProduct[] }
+    productPages = (productsData.data || []).map((product) => ({
+      url: `${baseUrl}${getProductPath(product)}`,
+      lastModified: product.updatedAt || product.createdAt || new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    }))
+  } catch (error) {
+    console.error('Error generating product sitemap entries:', error)
+  }
   
   try {
     // Fetch all published blogs for sitemap
@@ -101,5 +128,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Continue without blog pages if there's an error
   }
 
-  return [...staticPages, ...blogPages, ...blogCategoryPages]
+  return [...staticPages, ...productPages, ...blogPages, ...blogCategoryPages]
 }

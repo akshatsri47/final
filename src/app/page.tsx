@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Agricultural Solutions & Products | PaceIT",
     description: "Discover high-quality agricultural products including herbicides, pesticides, fertilizers, and crop protection solutions.",
-    url: "https://paceit.com",
+    url: "https://www.krishdoctor.in",
     images: [
       {
         url: "/banner1.jpg",
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     ],
   },
   alternates: {
-    canonical: "https://paceit.com",
+    canonical: "https://www.krishdoctor.in",
   },
 };
 

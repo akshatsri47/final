@@ -6,7 +6,7 @@ import { generateProductStructuredData, generateBreadcrumbStructuredData } from 
 import { Product } from "../../../../types/types";
 import { getProductPath } from "@/lib/productUrl";
 
-const siteUrl = "https://krishdoctor.in";
+const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.krishdoctor.in").replace(/\/$/, "");
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -103,6 +103,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     pricing: product.pricing || [],
     category: product.category || "",
     url: productUrl,
+    isOutOfStock: product.isOutOfStock,
   });
 
   const breadcrumbStructuredData = generateBreadcrumbStructuredData([

@@ -115,6 +115,7 @@ export interface ProductInput {
   pricing: ProductPrice[];
   category: string;
   url: string;
+  isOutOfStock?: boolean;
 }
 
 /**
@@ -138,7 +139,9 @@ export function generateProductStructuredData(product: ProductInput): JsonLd {
       "@type": "Offer",
       price: lowestPrice,
       priceCurrency: "INR",
-      availability: "https://schema.org/InStock",
+      availability: product.isOutOfStock
+        ? "https://schema.org/OutOfStock"
+        : "https://schema.org/InStock",
       seller: {
         "@context": "https://schema.org",
         "@type": "Organization",
