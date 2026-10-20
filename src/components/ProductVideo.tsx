@@ -8,6 +8,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { createPortal } from "react-dom";
 import { GripHorizontal, Play, X } from "lucide-react";
 
 interface ProductVideoProps {
@@ -40,6 +41,7 @@ function isSafeVideoUrl(value: string) {
 }
 
 export default function ProductVideo({ url, productName }: ProductVideoProps) {
+  const [isMounted, setIsMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
@@ -48,9 +50,15 @@ export default function ProductVideo({ url, productName }: ProductVideoProps) {
     pointerId: number;
     offsetX: number;
     offsetY: number;
+    startX: number;
+    startY: number;
+    moved: boolean;
   } | null>(null);
+  const suppressOpenRef = useRef(false);
   const youtubeId = useMemo(() => getYouTubeId(url), [url]);
   const directVideoUrl = !youtubeId && isSafeVideoUrl(url) ? url : null;
+
+  useEffect(() => setIsMounted(true), []);
 
   const keepOnScreen = useCallback((x: number, y: number) => {
     const player = playerRef.current;
@@ -64,7 +72,8 @@ export default function ProductVideo({ url, productName }: ProductVideoProps) {
     };
   }, []);
 
-  const startDragging = (event: ReactPointerEvent<HTMLButtonElement>) => {
+  const startDragging = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if ((event.target as HTMLElement).closest("[data-no-drag]")) return;
     const player = playerRef.current;
     if (!player) return;
     const rect = player.getBoundingClientRect();
@@ -72,23 +81,45 @@ export default function ProductVideo({ url, productName }: ProductVideoProps) {
       pointerId: event.pointerId,
       offsetX: event.clientX - rect.left,
       offsetY: event.clientY - rect.top,
+      startX: event.clientX,
+      startY: event.clientY,
+      moved: false,
     };
     setPosition({ x: rect.left, y: rect.top });
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
-  const movePlayer = (event: ReactPointerEvent<HTMLButtonElement>) => {
+  const movePlayer = (event: ReactPointerEvent<HTMLDivElement>) => {
     const drag = dragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
+    if (Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 4) {
+      drag.moved = true;
+    }
+    if (!drag.moved) return;
     setPosition(keepOnScreen(event.clientX - drag.offsetX, event.clientY - drag.offsetY));
   };
 
-  const stopDragging = (event: ReactPointerEvent<HTMLButtonElement>) => {
-    if (dragRef.current?.pointerId !== event.pointerId) return;
+  const stopDragging = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    if (drag?.pointerId !== event.pointerId) return;
+    suppressOpenRef.current = drag.moved;
+    if (drag.moved) {
+      window.setTimeout(() => {
+        suppressOpenRef.current = false;
+      }, 0);
+    }
     dragRef.current = null;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
+  };
+
+  const openVideo = () => {
+    if (suppressOpenRef.current) {
+      suppressOpenRef.current = false;
+      return;
+    }
+    setIsOpen(true);
   };
 
   useEffect(() => {
@@ -113,7 +144,7 @@ export default function ProductVideo({ url, productName }: ProductVideoProps) {
     };
   }, [isOpen]);
 
-  if (!youtubeId && !directVideoUrl) return null;
+  if (!isMounted || (!youtubeId && !directVideoUrl)) return null;
 
   const youtubePreview = youtubeId
     ? `https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&loop=1&playlist=${youtubeId}&controls=0&modestbranding=1&playsinline=1&rel=0`
@@ -122,32 +153,31 @@ export default function ProductVideo({ url, productName }: ProductVideoProps) {
     ? `https://www.youtube.com/embed/${youtubeId}?autoplay=1&loop=1&playlist=${youtubeId}&controls=1&modestbranding=1&playsinline=1&rel=0`
     : "";
 
-  return (
+  return createPortal(
     <>
       {!isDismissed && (
         <div
           ref={playerRef}
+          onPointerDown={startDragging}
+          onPointerMove={movePlayer}
+          onPointerUp={stopDragging}
+          onPointerCancel={stopDragging}
           style={position ? { left: position.x, top: position.y } : undefined}
-          className={`fixed z-40 w-[150px] overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl sm:w-[180px] ${
+          className={`fixed z-[80] w-[150px] touch-none overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl sm:w-[180px] ${
             position ? "" : "bottom-4 right-4"
           }`}
         >
           <div className="flex h-8 items-center justify-between border-b border-gray-200 bg-white px-1">
-            <button
-              type="button"
-              onPointerDown={startDragging}
-              onPointerMove={movePlayer}
-              onPointerUp={stopDragging}
-              onPointerCancel={stopDragging}
-              aria-label="Move video player"
-              title="Move video player"
-              className="flex h-7 flex-1 touch-none cursor-grab items-center justify-center text-gray-500 active:cursor-grabbing"
+            <div
+              aria-hidden="true"
+              className="flex h-7 flex-1 cursor-grab items-center justify-center text-gray-500 active:cursor-grabbing"
             >
               <GripHorizontal className="h-5 w-5" />
-            </button>
+            </div>
             <button
               type="button"
               onClick={() => setIsDismissed(true)}
+              data-no-drag
               aria-label="Close video player"
               title="Close video player"
               className="flex h-7 w-7 items-center justify-center text-gray-600 hover:text-gray-950"
@@ -157,9 +187,9 @@ export default function ProductVideo({ url, productName }: ProductVideoProps) {
           </div>
           <button
             type="button"
-            onClick={() => setIsOpen(true)}
+            onClick={openVideo}
             aria-label={`Open video for ${productName}`}
-            className="group relative block aspect-[9/16] w-full overflow-hidden bg-black"
+            className="group relative block aspect-[9/16] w-full cursor-grab overflow-hidden bg-black active:cursor-grabbing"
           >
             {youtubeId ? (
               <iframe
@@ -228,6 +258,7 @@ export default function ProductVideo({ url, productName }: ProductVideoProps) {
           </div>
         </div>
       )}
-    </>
+    </>,
+    document.body,
   );
 }
