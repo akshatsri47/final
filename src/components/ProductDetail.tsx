@@ -8,6 +8,7 @@ import { useCoupon } from "../app/context/CouponContext";
 import { calculatePricing } from "../app/utils/discount";
 import Image from "next/image";
 import { CheckCircle, Star, ThumbsUp } from "lucide-react";
+import ProductVideo from "./ProductVideo";
 
 interface PricingOption {
   packageSize: string;
@@ -113,89 +114,100 @@ export default function ProductDetails({ product, onReviewsClick }: ProductDetai
         </div>
       </div>
 
-      <div className="bg-white shadow-lg border p-6 rounded-lg mt-6 w-full md:w-3/4">
-        <label htmlFor="packageSize" className="block text-sm font-medium text-gray-700">
-          Select Package Size
-        </label>
-        <select
-          id="packageSize"
-          name="packageSize"
-          className="border p-2 w-full rounded-md mb-4"
-          value={selectedPrice?.packageSize || ""}
-          onChange={(e) => {
-            const selected = product.pricing.find(
-              (p) => p.packageSize === e.target.value
-            );
-            setSelectedPrice(selected || null);
-          }}
+      <div className="mt-6 flex w-full flex-col items-start gap-4 md:flex-row">
+        <div
+          className={`w-full rounded-lg border bg-white p-6 shadow-lg ${
+            product.videoUrl ? "md:min-w-0 md:flex-1" : "md:w-3/4"
+          }`}
         >
-          {product.pricing.map((option, index) => (
-            <option key={index} value={option.packageSize}>
-              {option.packageSize}
-            </option>
-          ))}
-        </select>
-        {selectedPrice && (
-          <div className="mb-2">
-            {appliedDiscount > 0 && (
-              <span className="text-gray-500 line-through text-lg">₹{originalPrice.toFixed(2)}</span>
-            )}
-            <div className="flex items-center gap-3">
-              <p className="text-3xl font-bold">₹{sellingPrice.toFixed(2)}</p>
+          <label htmlFor="packageSize" className="block text-sm font-medium text-gray-700">
+            Select Package Size
+          </label>
+          <select
+            id="packageSize"
+            name="packageSize"
+            className="border p-2 w-full rounded-md mb-4"
+            value={selectedPrice?.packageSize || ""}
+            onChange={(e) => {
+              const selected = product.pricing.find(
+                (p) => p.packageSize === e.target.value
+              );
+              setSelectedPrice(selected || null);
+            }}
+          >
+            {product.pricing.map((option, index) => (
+              <option key={index} value={option.packageSize}>
+                {option.packageSize}
+              </option>
+            ))}
+          </select>
+          {selectedPrice && (
+            <div className="mb-2">
               {appliedDiscount > 0 && (
-                <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">{appliedDiscount}% OFF</span>
+                <span className="text-gray-500 line-through text-lg">₹{originalPrice.toFixed(2)}</span>
               )}
-              <span className="flex items-center gap-1 rounded-lg border border-[#b9dec9] bg-[#effaf3] px-2 py-1 text-xs font-bold text-[#0f7a45]">
-                <CheckCircle className="h-4 w-4 fill-[#0f7a45] text-white" />
-                No Other Charges
-              </span>
+              <div className="flex items-center gap-3">
+                <p className="text-3xl font-bold">₹{sellingPrice.toFixed(2)}</p>
+                {appliedDiscount > 0 && (
+                  <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">{appliedDiscount}% OFF</span>
+                )}
+                <span className="flex items-center gap-1 rounded-lg border border-[#b9dec9] bg-[#effaf3] px-2 py-1 text-xs font-bold text-[#0f7a45]">
+                  <CheckCircle className="h-4 w-4 fill-[#0f7a45] text-white" />
+                  No Other Charges
+                </span>
+              </div>
+            </div>
+          )}
+
+          <p className="text-gray-600">Inclusive of all taxes</p>
+
+          <div className="mt-4">
+            <p className="font-semibold">Quantity:</p>
+            <div className="flex gap-3 mt-2">
+              <button onClick={decreaseQuantity} className="px-4 py-2 bg-gray-200 rounded-md">
+                ➖
+              </button>
+              <p className="text-lg font-bold">{quantity}</p>
+              <button onClick={increaseQuantity} className="px-4 py-2 bg-gray-200 rounded-md">
+                ➕
+              </button>
             </div>
           </div>
-        )}
 
-        <p className="text-gray-600">Inclusive of all taxes</p>
+          <button
+            onClick={addToCart}
+            className={`w-full text-white py-2 rounded-md font-semibold ${
+              adding || product.isOutOfStock ? "cursor-not-allowed bg-gray-400 opacity-70" : "bg-yellow-500"
+            }`}
+            disabled={adding || !selectedPrice || product.isOutOfStock}
+          >
+            {product.isOutOfStock ? "Out of Stock" : adding ? "Adding..." : "🛒 Add to Cart"}
+          </button>
 
-        <div className="mt-4">
-          <p className="font-semibold">Quantity:</p>
-          <div className="flex gap-3 mt-2">
-            <button onClick={decreaseQuantity} className="px-4 py-2 bg-gray-200 rounded-md">
-              ➖
-            </button>
-            <p className="text-lg font-bold">{quantity}</p>
-            <button onClick={increaseQuantity} className="px-4 py-2 bg-gray-200 rounded-md">
-              ➕
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={onReviewsClick}
+            className="mt-4 flex flex-wrap items-center gap-2 text-left"
+          >
+            <span className="flex items-center gap-1 text-yellow-400">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <Star
+                  key={index}
+                  className={`h-6 w-6 ${
+                    index < Math.round(rating) ? "fill-yellow-400" : "fill-transparent"
+                  }`}
+                />
+              ))}
+            </span>
+            <span className="text-2xl font-bold text-gray-900">{rating.toFixed(1)}</span>
+            <span className="basis-full text-lg text-gray-500">({verifiedReviewsCount} verified reviews)</span>
+          </button>
         </div>
-
-        <button
-          onClick={addToCart}
-          className={`w-full text-white py-2 rounded-md font-semibold ${
-            adding || product.isOutOfStock ? "cursor-not-allowed bg-gray-400 opacity-70" : "bg-yellow-500"
-          }`}
-          disabled={adding || !selectedPrice || product.isOutOfStock}
-        >
-          {product.isOutOfStock ? "Out of Stock" : adding ? "Adding..." : "🛒 Add to Cart"}
-        </button>
-
-        <button
-          type="button"
-          onClick={onReviewsClick}
-          className="mt-4 flex flex-wrap items-center gap-2 text-left"
-        >
-          <span className="flex items-center gap-1 text-yellow-400">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <Star
-                key={index}
-                className={`h-6 w-6 ${
-                  index < Math.round(rating) ? "fill-yellow-400" : "fill-transparent"
-                }`}
-              />
-            ))}
-          </span>
-          <span className="text-2xl font-bold text-gray-900">{rating.toFixed(1)}</span>
-          <span className="basis-full text-lg text-gray-500">({verifiedReviewsCount} verified reviews)</span>
-        </button>
+        {product.videoUrl && (
+          <div className="w-full md:w-[180px] lg:w-[220px]">
+            <ProductVideo url={product.videoUrl} productName={product.name} />
+          </div>
+        )}
       </div>
     </div>
   );

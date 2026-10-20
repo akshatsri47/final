@@ -15,6 +15,7 @@
       name: string;               // Product Name (e.g., 'Bayer Evergol Xtend')
       slug?: string;              // Human-readable product URL segment
       description: string;        // Detailed Product Description          
+      videoUrl?: string;
       category: string;           // Category (e.g., 'Seed Treatment')
       pricing:Pricing[];
       images: string[];           // Array of image URLs
