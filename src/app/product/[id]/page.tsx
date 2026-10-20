@@ -1,9 +1,12 @@
 import { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import ProductDetailClient from "./ProductDetailClient";
 import StructuredDataComponent from "@/components/StructuredData";
 import { generateProductStructuredData, generateBreadcrumbStructuredData } from "@/lib/seo";
 import { Product } from "../../../../types/types";
+import { getProductPath } from "@/lib/productUrl";
+
+const siteUrl = "https://krishdoctor.in";
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -37,6 +40,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
   // const lowestPrice = Math.min(...(product.pricing?.map(p => p.price) || [0]));
   const category = product.category || "Agricultural Product";
+  const productUrl = `${siteUrl}${getProductPath(product)}`;
 
   return {
     title: product.name,
@@ -54,7 +58,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     openGraph: {
       title: `${product.name} | PaceIT`,
       description: product.description || `High-quality ${category.toLowerCase()} for agricultural use.`,
-      url: `https://paceit.com/product/${id}`,
+      url: productUrl,
       images: [
         {
           url: product.images?.[0] || "/banner1.jpg",
@@ -72,7 +76,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
       images: [product.images?.[0] || "/banner1.jpg"],
     },
     alternates: {
-      canonical: `https://paceit.com/product/${id}`,
+      canonical: productUrl,
     },
   };
 }
@@ -84,6 +88,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
   if (!product) {
     notFound();
   }
+  const canonicalPath = getProductPath(product);
+  if (`/product/${id}` !== canonicalPath) {
+    permanentRedirect(canonicalPath);
+  }
+  const productUrl = `${siteUrl}${canonicalPath}`;
 
   // Generate structured data
   const productStructuredData = generateProductStructuredData({
@@ -93,14 +102,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
     images: product.images || [],
     pricing: product.pricing || [],
     category: product.category || "",
-    url: `https://paceit.com/product/${id}`,
+    url: productUrl,
   });
 
   const breadcrumbStructuredData = generateBreadcrumbStructuredData([
-    { name: "Home", url: "https://paceit.com" },
-    { name: "Products", url: "https://paceit.com/product" },
-    { name: product.category || "Agricultural Products", url: `https://paceit.com/product?category=${product.category}` },
-    { name: product.name, url: `https://paceit.com/product/${id}` },
+    { name: "Home", url: siteUrl },
+    { name: "Products", url: `${siteUrl}/product` },
+    { name: product.category || "Agricultural Products", url: `${siteUrl}/product?category=${encodeURIComponent(product.category || "")}` },
+    { name: product.name, url: productUrl },
   ]);
 
   return (

@@ -31,6 +31,9 @@ export async function PUT(req: NextRequest) {
     }
 
     const productData = productSnap.data();
+    if (productData.isOutOfStock === true) {
+      return NextResponse.json({ success: false, error: "This product is out of stock" }, { status: 409 });
+    }
     const selectedPackage = productData.pricing?.find((p: { packageSize: string }) => p.packageSize === packageSize);
 
     // Calculate actual selling price from base price and product discount
@@ -54,6 +57,7 @@ export async function PUT(req: NextRequest) {
       addedAt: new Date().toISOString(),
       codAvailable: productData.codAvailable ?? true, // snapshot COD availability from product
       paymentEligibility: productData.paymentEligibility ?? (productData.codAvailable === false ? "PREPAID_ONLY" : "PARTIAL_COD_AND_PREPAID"),
+      isOutOfStock: false,
     };
 
     const userData = userSnap.data();
@@ -104,6 +108,7 @@ export async function GET(req: NextRequest) {
         ...item,
         codAvailable: product.codAvailable !== false,
         paymentEligibility: product.paymentEligibility ?? (product.codAvailable === false ? "PREPAID_ONLY" : "PARTIAL_COD_AND_PREPAID"),
+        isOutOfStock: product.isOutOfStock === true,
       };
     }));
     return NextResponse.json({ success: true, cart }, { status: 200 });

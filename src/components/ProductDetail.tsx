@@ -46,7 +46,7 @@ export default function ProductDetails({ product, onReviewsClick }: ProductDetai
   }, [product]);
 
   const addToCart = async () => {
-    if (!product || quantity < 1 || !selectedPrice) return;
+    if (!product || product.isOutOfStock || quantity < 1 || !selectedPrice) return;
     setAdding(true);
     
     try {
@@ -74,6 +74,11 @@ export default function ProductDetails({ product, onReviewsClick }: ProductDetai
   return (
     <div className="w-full flex flex-col">
       <h1 className="text-[26px] font-bold leading-tight md:text-3xl">{product.name}</h1>
+      {product.isOutOfStock && (
+        <div className="mt-3 w-fit rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 ring-1 ring-red-200">
+          Out of Stock
+        </div>
+      )}
       <p className="mt-2 text-base leading-6 text-gray-700 md:text-lg">{product.description}</p>
 
       <div className="mt-3 w-fit">
@@ -165,12 +170,12 @@ export default function ProductDetails({ product, onReviewsClick }: ProductDetai
 
         <button
           onClick={addToCart}
-          className={`w-full bg-yellow-500 text-white py-2 rounded-md font-semibold ${
-            adding ? "opacity-50 cursor-not-allowed" : ""
+          className={`w-full text-white py-2 rounded-md font-semibold ${
+            adding || product.isOutOfStock ? "cursor-not-allowed bg-gray-400 opacity-70" : "bg-yellow-500"
           }`}
-          disabled={adding || !selectedPrice}
+          disabled={adding || !selectedPrice || product.isOutOfStock}
         >
-          {adding ? "Adding..." : "🛒 Add to Cart"}
+          {product.isOutOfStock ? "Out of Stock" : adding ? "Adding..." : "🛒 Add to Cart"}
         </button>
 
         <button

@@ -9,6 +9,7 @@ import Image from "next/image";
 import api from "../../utils/api";
 import { calculatePricing } from "../../utils/discount";
 import { Star } from "lucide-react";
+import { getProductPath } from "../../../lib/productUrl";
 
 interface ProductDetailClientProps {
   product: Product;
@@ -320,7 +321,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   return (
                     <a
                       key={deal.id}
-                      href={`/product/${deal.id}`}
+                      href={getProductPath(deal)}
                       className="bg-[#f9f9f9] border border-gray-300 rounded p-4 text-center w-[200px]"
                     >
                    <Image

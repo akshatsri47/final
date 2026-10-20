@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
+import { getProductPath } from "../../lib/productUrl";
 
 interface MobileSearchProps {
   isMenuOpen: boolean;
@@ -10,6 +11,7 @@ interface MobileSearchProps {
 interface SearchResult {
   id: string;
   name: string;
+  slug?: string;
 }
 
 export default function MobileSearch({ isMenuOpen }: MobileSearchProps) {
@@ -29,10 +31,8 @@ export default function MobileSearch({ isMenuOpen }: MobileSearchProps) {
     }
   };
 
-  const handleProductSelect = (productId: string) => {
-    if (!productId) return;
-    console.log(`✅ Redirecting to: /product/${productId}`);
-    router.push(`/product/${productId}`);
+  const handleProductSelect = (product: SearchResult) => {
+    router.push(getProductPath(product));
   };
 
   // Fetch search results using the updated API
@@ -93,7 +93,7 @@ export default function MobileSearch({ isMenuOpen }: MobileSearchProps) {
                 <button
                   key={product.id}
                   type="button"
-                  onClick={() => handleProductSelect(product.id)}
+                  onClick={() => handleProductSelect(product)}
                   className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-900 border-b border-gray-100 last:border-0"
                 >
                   <span className="font-medium">{product.name}</span>

@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
       merchantOrderId,
     });
 
-    const { paymentState, amount } = res.data;
+    const { paymentState, amount, errorCode, detailedErrorCode, paymentMode, transactionId } = res.data;
 
     if (paymentState === "COMPLETED") {
       // ✅ Verify the PAID AMOUNT matches the order's expected amount
@@ -73,6 +73,7 @@ export async function GET(req: NextRequest) {
           {
             success: false,
             orderId: merchantOrderId,
+            paymentState,
             msg: "Payment amount mismatch. Please contact support.",
           },
           { status: 200 }
@@ -94,6 +95,7 @@ export async function GET(req: NextRequest) {
         {
           success: true,
           orderId: merchantOrderId,
+          paymentState,
           msg: "Payment successful",
         },
         { status: 200 }
@@ -101,10 +103,25 @@ export async function GET(req: NextRequest) {
     }
 
     if (paymentState === "FAILED") {
+      try {
+        await updateDoc(orderRef, {
+          status: "Payment Failed",
+          paymentFailedAt: new Date().toISOString(),
+          paymentFailureCode: errorCode || null,
+          paymentFailureDetail: detailedErrorCode || null,
+          failedPaymentMode: paymentMode || null,
+          failedTransactionId: transactionId || null,
+        });
+      } catch (writeError) {
+        console.error("Could not save payment failure details:", writeError);
+      }
       return NextResponse.json(
         {
           success: false,
           orderId: merchantOrderId,
+          paymentState,
+          errorCode: errorCode || null,
+          detailedErrorCode: detailedErrorCode || null,
           msg: "Payment failed - PhonePe returned FAILED",
         },
         { status: 200 }
@@ -115,6 +132,7 @@ export async function GET(req: NextRequest) {
         {
           success: false,
           orderId: merchantOrderId,
+          paymentState,
           msg: "Payment is Pending",
         },
         { status: 200 }
@@ -125,6 +143,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(
       {
         success: false,
+        paymentState,
         msg: `Unexpected payment state: ${paymentState}`,
         orderId: merchantOrderId,
       },

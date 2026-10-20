@@ -11,19 +11,24 @@ const client = StandardCheckoutClient.getInstance(clientId, clientSecret, client
 export async function POST(req: NextRequest) {
     try {
       const {merchantOrderId} = await req.json(); 
-  
+
       if (!merchantOrderId) {
         return NextResponse.json({ msg: "Merchant Order Id required" }, { status: 400 });
       }
   
-      const response = await client.getOrderStatus(merchantOrderId);
+      const response = await client.getOrderStatus(merchantOrderId, true);
       console.log(response.state);
+      const latestAttempt = response.paymentDetails?.[response.paymentDetails.length - 1];
   
       return NextResponse.json({
         success: true,
         merchantOrderId,
         paymentState: response.state,
         amount: response.amount ?? null, // amount in paise — used by verifyOrder to validate the payment
+        errorCode: latestAttempt?.errorCode || response.errorCode || null,
+        detailedErrorCode: latestAttempt?.detailedErrorCode || response.detailedErrorCode || null,
+        paymentMode: latestAttempt?.paymentMode || null,
+        transactionId: latestAttempt?.transactionId || null,
       });
     } catch (e) {
       console.error("Status check error:", e);
@@ -33,4 +38,3 @@ export async function POST(req: NextRequest) {
       );
     }
   }
-  

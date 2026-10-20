@@ -20,6 +20,9 @@ function OrderConfirmationContent() {
     const [isCodOrder, setIsCodOrder] = useState(false);
     const [codAdvanceAmount, setCodAdvanceAmount] = useState(0);
     const [codDueAmount, setCodDueAmount] = useState(0);
+    const [canUseFullCod, setCanUseFullCod] = useState(false);
+    const [paymentFailed, setPaymentFailed] = useState(false);
+    const [isConvertingToCod, setIsConvertingToCod] = useState(false);
     // Guard against double execution (React StrictMode / effect re-runs) —
     // verification + Shiprocket creation must run only once per page load.
     const hasRunRef = useRef(false);
@@ -54,6 +57,10 @@ function OrderConfirmationContent() {
                         orderPaymentMethod = orderRes.data.data.paymentMethod ?? orderPaymentMethod;
                         setCodAdvanceAmount(orderRes.data.data.codAdvanceAmount ?? 0);
                         setCodDueAmount(orderRes.data.data.codDueAmount ?? 0);
+                        setCanUseFullCod(
+                            orderRes.data.data.fullCodAllowed === true &&
+                            orderRes.data.data.allowedPaymentMethods?.includes("FULL_COD")
+                        );
                     }
                 } catch (fetchError) {
                     console.warn("Could not fetch order details, falling back to URL params:", fetchError);
@@ -71,7 +78,7 @@ function OrderConfirmationContent() {
 
                 console.log("Payment verification response:", res.data);
 
-                const { success: paymentSuccess } = res.data;
+                const { success: paymentSuccess, paymentState } = res.data;
                 if (paymentSuccess) {
                     const shipId = await createShiprocketOrder(userId, isCod ? "COD" : "ONLINE", orderId);
                     setShipRocketId(shipId);
@@ -89,14 +96,19 @@ function OrderConfirmationContent() {
                     }
                     // Confirmation is shown only after payment verification and shipment creation.
                     setSuccess(true);
-                } else {
-                    // Update order status for failed payment
+                } else if (paymentState === "FAILED") {
+                    setPaymentFailed(true);
+                    // Only PhonePe's terminal FAILED state is recorded as a failure.
                     try {
                         await updateOrderStatus(orderId, "Payment Failed", userId);
                     } catch (statusError) {
                         console.warn("Failed to update order status:", statusError);
                     }
-                    setError("Payment verification failed. Please contact support.");
+                    setError("The online payment failed. You can retry later or place this same order using Full COD below.");
+                } else if (paymentState === "PENDING") {
+                    setError("Your payment is still pending with PhonePe. Please wait a few minutes and refresh this page.");
+                } else {
+                    setError(res.data?.msg || "Payment could not be verified. Please contact support.");
                 }
             } catch (err) {
                 console.error("Order confirmation error:", err);
@@ -108,6 +120,35 @@ function OrderConfirmationContent() {
 
         handleOrderConfirmation();
     }, [orderId, paymentMethod]);
+
+    const convertToFullCod = async () => {
+        if (!orderId || isConvertingToCod) return;
+        const userId = localStorage.getItem("userId");
+        if (!userId) {
+            setError("Please log in again to place this order using COD.");
+            return;
+        }
+
+        setIsConvertingToCod(true);
+        try {
+            const conversion = await axios.post("/api/order/full-cod", { orderId, userId });
+            const dueAmount = Number(conversion.data?.data?.totalAmount) || 0;
+            const shipId = await createShiprocketOrder(userId, "FULL_COD", orderId);
+            await updateOrderStatus(orderId, "Full COD Confirmed - Ready to Ship", userId);
+            setShipRocketId(shipId);
+            setCodAdvanceAmount(0);
+            setCodDueAmount(dueAmount);
+            setIsCodOrder(true);
+            setCanUseFullCod(false);
+            setError("");
+            setSuccess(true);
+        } catch (err) {
+            const message = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+            setError(message || "Could not switch this order to Full COD. Please try again.");
+        } finally {
+            setIsConvertingToCod(false);
+        }
+    };
 
     if (loading) {
         return <p className="text-center py-10">Loading...</p>;
@@ -122,7 +163,19 @@ function OrderConfirmationContent() {
                     Order Not Confirmed !
                 </h1>}
                 {error && !success ? (
-                    <p className="text-red-500">{error}</p>
+                    <>
+                        <p className="text-red-500">{error}</p>
+                        {paymentFailed && canUseFullCod && (
+                            <button
+                                type="button"
+                                onClick={convertToFullCod}
+                                disabled={isConvertingToCod}
+                                className="mt-6 w-full rounded-md bg-green-600 px-6 py-3 font-semibold text-white transition hover:bg-green-700 disabled:cursor-wait disabled:bg-gray-400"
+                            >
+                                {isConvertingToCod ? "Confirming COD Order..." : "Place This Order with Full COD"}
+                            </button>
+                        )}
+                    </>
                 ) : success ? (
                     <>
                         {isCodOrder ? (

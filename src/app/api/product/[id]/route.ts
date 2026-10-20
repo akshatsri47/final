@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "../../../../../utils/firebase";
-import { doc, getDoc ,deleteDoc} from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, deleteDoc } from "firebase/firestore";
+import { slugifyProductName } from "@/lib/productUrl";
+
+async function findProduct(identifier: string) {
+  if (!identifier.includes("/")) {
+    const directRef = doc(db, "products", identifier);
+    const directSnap = await getDoc(directRef);
+    if (directSnap.exists()) return directSnap;
+  }
+
+  const productsSnap = await getDocs(collection(db, "products"));
+  return productsSnap.docs.find((productDoc) => {
+    const data = productDoc.data();
+    return data.slug === identifier || slugifyProductName(data.name || "") === identifier;
+  }) || null;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,10 +25,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Product ID is required" }, { status: 400 });
     }
 
-    const productRef = doc(db, "products", id);
-    const productSnap = await getDoc(productRef);
+    const productSnap = await findProduct(decodeURIComponent(id));
 
-    if (!productSnap.exists()) {
+    if (!productSnap) {
       return NextResponse.json({ success: false, error: "Product not found" }, { status: 404 });
     }
 

@@ -14,6 +14,7 @@ export interface CartItem {
   image?: string | string[];
   images?: string[];
   addedAt?: string;
+  isOutOfStock?: boolean;
 }
 
 export default function CartPage() {
@@ -122,6 +123,9 @@ export default function CartPage() {
   const placeOrder = async () => {
     if (!userId) return alert("User ID not found!");
     if (cart.length === 0) return alert("Cart is empty!");
+    if (cart.some((item) => item.isOutOfStock)) {
+      return alert("Remove out-of-stock products before checkout.");
+    }
     setOrderStatus("Proceeding to secure checkout...");
     await sendQuantityUpdates(); // flush pending quantity changes so checkout sees them
     router.push("/order");
@@ -183,6 +187,7 @@ export default function CartPage() {
                       <h2 className="text-base md:text-lg font-semibold">{item.name}</h2>
                       <p className="text-gray-700">Price: ₹{item.price}</p>
                       <p className="text-gray-500 text-sm mt-1">Size: {item.packageSize}</p>
+                      {item.isOutOfStock && <p className="mt-1 text-sm font-semibold text-red-600">Out of Stock</p>}
                     </div>
                   </div>
                   <div className="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4 w-full md:w-auto mt-2 md:mt-0">
@@ -252,7 +257,8 @@ export default function CartPage() {
                 <button
                   type="button"
                   onClick={placeOrder}
-                  className="bg-green-500 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg text-base md:text-lg font-semibold w-full sm:w-auto"
+                  disabled={cart.some((item) => item.isOutOfStock)}
+                  className="bg-green-500 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg text-base md:text-lg font-semibold w-full sm:w-auto disabled:cursor-not-allowed disabled:bg-gray-400"
                 >
                   🛒 Order Now
                 </button>

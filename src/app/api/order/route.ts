@@ -76,6 +76,9 @@ export async function POST(req: NextRequest) {
         }
 
         const productData = productSnap.data();
+        if (productData?.isOutOfStock === true) {
+          throw new Error(`${productData?.name || "A product"} is out of stock`);
+        }
 
         // Legacy products predate the paymentEligibility field. Firestore rejects
         // `undefined` values, so always persist the same normalized value used by
@@ -222,7 +225,11 @@ export async function POST(req: NextRequest) {
     );
   } catch (error) {
     console.error("Error creating order:", error);
-    return NextResponse.json({ success: false, error: "Error creating order" }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Error creating order";
+    return NextResponse.json(
+      { success: false, error: message },
+      { status: message.includes("out of stock") ? 409 : 500 }
+    );
   }
 }
 

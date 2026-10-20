@@ -6,6 +6,7 @@ import { Product } from "../../types/types";
 import api from "../app/utils/api";
 import { useCoupon } from "@/app/context/CouponContext";
 import { calculatePricing } from "../app/utils/discount";
+import { getProductPath } from "../lib/productUrl";
 
 export interface PricingOption {
   packageSize: string;
@@ -23,6 +24,7 @@ export default function ProductCard({ product }: { product: ExamProduct }) {
   const [selectedPrice, setSelectedPrice] = useState<PricingOption | null>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [userId, setUserId] = useState<string>('');
+  const productPath = getProductPath(product);
 
   // Get product images
   const productImage = product.images?.[0]
@@ -71,6 +73,8 @@ export default function ProductCard({ product }: { product: ExamProduct }) {
   const addToCart = async (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
+
+    if (product.isOutOfStock) return;
 
     if (!userId) {
       alert(' Please log in.');
@@ -128,7 +132,12 @@ export default function ProductCard({ product }: { product: ExamProduct }) {
             {appliedDiscount}% OFF
           </div>
         )}
-        <Link href={`/product/${product.id}`} className="block">
+        {product.isOutOfStock && (
+          <div className="absolute left-3 top-3 z-10 rounded bg-gray-900 px-3 py-1 text-xs font-semibold text-white">
+            Out of Stock
+          </div>
+        )}
+        <Link href={productPath} className="block">
           <div className="mt-7 w-full h-52 relative overflow-hidden">
             <Image
               src={productImage}
@@ -142,7 +151,7 @@ export default function ProductCard({ product }: { product: ExamProduct }) {
       </div>
       
       <div className="p-4">
-        <Link href={`/product/${product.id}`} className="block">
+        <Link href={productPath} className="block">
           <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">{product.category}</p>
           <h2 className="text-lg font-medium text-gray-800 mb-3">{product.name}</h2>
         </Link>
@@ -167,7 +176,7 @@ export default function ProductCard({ product }: { product: ExamProduct }) {
 
         {selectedPrice && (
           <div className="mt-3 flex items-end justify-between">
-            <Link href={`/product/${product.id}`} className="block">
+            <Link href={productPath} className="block">
               <div>
                 {appliedDiscount > 0 && (
                   <span className="block text-gray-500 line-through text-xs">₹{originalPrice}</span>
@@ -178,13 +187,16 @@ export default function ProductCard({ product }: { product: ExamProduct }) {
 
             {/* Add to Cart Button - Removed from Link */}
             <div onClick={(e) => e.stopPropagation()}>
-              <button 
+              <button
+                disabled={product.isOutOfStock}
                 className={`text-white text-sm px-4 py-2 rounded-md transition-all duration-300 ${
-                  isHovered ? 'bg-emerald-600' : 'bg-emerald-500'
+                  product.isOutOfStock
+                    ? 'cursor-not-allowed bg-gray-400'
+                    : isHovered ? 'bg-emerald-600' : 'bg-emerald-500'
                 }`}
                 onClick={addToCart}
               >
-                Add to Cart 
+                {product.isOutOfStock ? "Unavailable" : "Add to Cart"}
               </button>
             </div>
           </div>
