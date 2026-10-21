@@ -215,7 +215,7 @@ export default function ProductVideo({
 
   return createPortal(
     <>
-      {!isDismissed && (
+      {!isDismissed && !isOpen && (
         <div
           ref={playerRef}
           onPointerDown={startDragging}
@@ -288,11 +288,20 @@ export default function ProductVideo({
               />
             )}
             {instagramMedia ? (
-              <span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 transition group-hover:bg-black/15">
+              <button
+                type="button"
+                data-no-drag
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setIsOpen(true);
+                }}
+                aria-label={`Open video for ${productName}`}
+                className="absolute inset-0 z-10 flex items-center justify-center bg-black/0 transition hover:bg-black/15"
+              >
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white shadow backdrop-blur-sm">
                   <Maximize2 className="h-5 w-5" />
                 </span>
-              </span>
+              </button>
             ) : (
               <span className="absolute inset-0 flex items-center justify-center bg-black/0 transition group-hover:bg-black/20">
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-gray-900 shadow">
