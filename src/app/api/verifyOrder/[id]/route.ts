@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
 import { db } from "../../../../../utils/firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { canRecoverFailedPaymentWithFullCod } from "@/lib/paymentEligibility";
 
 
 export async function GET(req: NextRequest) {
@@ -103,6 +104,13 @@ export async function GET(req: NextRequest) {
     }
 
     if (paymentState === "FAILED") {
+      const failedPaymentFullCodAllowed =
+        orderData.failedPaymentFullCodAllowed ??
+        canRecoverFailedPaymentWithFullCod(
+          orderData.items || [],
+          Number(orderData.totalBeforePaymentDiscount ?? orderData.totalAmount) || 0,
+        );
+
       try {
         await updateDoc(orderRef, {
           status: "Payment Failed",
@@ -122,6 +130,7 @@ export async function GET(req: NextRequest) {
           paymentState,
           errorCode: errorCode || null,
           detailedErrorCode: detailedErrorCode || null,
+          failedPaymentFullCodAllowed,
           msg: "Payment failed - PhonePe returned FAILED",
         },
         { status: 200 }

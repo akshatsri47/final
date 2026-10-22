@@ -22,6 +22,7 @@ function OrderConfirmationContent() {
     const [codDueAmount, setCodDueAmount] = useState(0);
     const [canUseFullCod, setCanUseFullCod] = useState(false);
     const [paymentFailed, setPaymentFailed] = useState(false);
+    const [showCodRecovery, setShowCodRecovery] = useState(false);
     const [isConvertingToCod, setIsConvertingToCod] = useState(false);
     // Guard against double execution (React StrictMode / effect re-runs) —
     // verification + Shiprocket creation must run only once per page load.
@@ -51,15 +52,15 @@ function OrderConfirmationContent() {
                 // Fetch the order to learn how it was paid (PhonePe's redirect URL does not
                 // carry the payment method) plus the COD advance / on-delivery split amounts
                 let orderPaymentMethod: string | null = paymentMethod;
+                let fullCodRecoveryAvailable = false;
                 try {
                     const orderRes = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/order?orderId=${orderId}&userId=${encodeURIComponent(userId)}`);
                     if (orderRes.data?.success && orderRes.data?.data) {
                         orderPaymentMethod = orderRes.data.data.paymentMethod ?? orderPaymentMethod;
                         setCodAdvanceAmount(orderRes.data.data.codAdvanceAmount ?? 0);
                         setCodDueAmount(orderRes.data.data.codDueAmount ?? 0);
-                        setCanUseFullCod(
-                            orderRes.data.data.failedPaymentFullCodAllowed === true
-                        );
+                        fullCodRecoveryAvailable = orderRes.data.data.failedPaymentFullCodAllowed === true;
+                        setCanUseFullCod(fullCodRecoveryAvailable);
                     }
                 } catch (fetchError) {
                     console.warn("Could not fetch order details, falling back to URL params:", fetchError);
@@ -96,14 +97,22 @@ function OrderConfirmationContent() {
                     // Confirmation is shown only after payment verification and shipment creation.
                     setSuccess(true);
                 } else if (paymentState === "FAILED") {
+                    const recoveryAvailable =
+                        res.data?.failedPaymentFullCodAllowed === true || fullCodRecoveryAvailable;
                     setPaymentFailed(true);
+                    setCanUseFullCod(recoveryAvailable);
+                    setShowCodRecovery(recoveryAvailable);
                     // Only PhonePe's terminal FAILED state is recorded as a failure.
                     try {
                         await updateOrderStatus(orderId, "Payment Failed", userId);
                     } catch (statusError) {
                         console.warn("Failed to update order status:", statusError);
                     }
-                    setError("The online payment failed. You can retry later or place this same order using Full COD below.");
+                    setError(
+                        recoveryAvailable
+                            ? "The online payment failed. You can place this same order using Full COD."
+                            : "The online payment failed. You can retry the payment later from your orders."
+                    );
                 } else if (paymentState === "PENDING") {
                     setError("Your payment is still pending with PhonePe. Please wait a few minutes and refresh this page.");
                 } else {
@@ -139,6 +148,7 @@ function OrderConfirmationContent() {
             setCodDueAmount(dueAmount);
             setIsCodOrder(true);
             setCanUseFullCod(false);
+            setShowCodRecovery(false);
             setError("");
             setSuccess(true);
         } catch (err) {
@@ -167,7 +177,7 @@ function OrderConfirmationContent() {
                         {paymentFailed && canUseFullCod && (
                             <button
                                 type="button"
-                                onClick={convertToFullCod}
+                                onClick={() => setShowCodRecovery(true)}
                                 disabled={isConvertingToCod}
                                 className="mt-6 w-full rounded-md bg-green-600 px-6 py-3 font-semibold text-white transition hover:bg-green-700 disabled:cursor-wait disabled:bg-gray-400"
                             >
@@ -211,6 +221,41 @@ function OrderConfirmationContent() {
                     View Your Orders
                 </Link>
             </div>
+            {showCodRecovery && paymentFailed && canUseFullCod && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+                    <div
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="full-cod-title"
+                        className="w-full max-w-md rounded-lg bg-white p-6 text-left shadow-xl"
+                    >
+                        <h2 id="full-cod-title" className="text-2xl font-bold text-gray-900">
+                            Payment Failed
+                        </h2>
+                        <p className="mt-3 text-gray-600">
+                            No online payment was received. Confirm this order with Full Cash on Delivery and pay when it arrives.
+                        </p>
+                        <div className="mt-6 flex gap-3">
+                            <button
+                                type="button"
+                                onClick={convertToFullCod}
+                                disabled={isConvertingToCod}
+                                className="flex-1 rounded-md bg-green-600 px-4 py-3 font-semibold text-white hover:bg-green-700 disabled:cursor-wait disabled:bg-gray-400"
+                            >
+                                {isConvertingToCod ? "Confirming..." : "Confirm Full COD"}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setShowCodRecovery(false)}
+                                disabled={isConvertingToCod}
+                                className="rounded-md border border-gray-300 px-4 py-3 font-semibold text-gray-700"
+                            >
+                                Not Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
